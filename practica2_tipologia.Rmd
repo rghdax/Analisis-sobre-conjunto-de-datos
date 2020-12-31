@@ -1,0 +1,119 @@
+---
+title: "practica Tipologia"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r librerias a usar}
+library(knitr)
+library(stringr)
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+
+```
+
+## R Markdown
+
+```{r carga de fichero con datos}
+
+df <- read.csv(file="https://raw.githubusercontent.com/dbagan13/WebScrapping/main/csv/recogiendo_tomates.csv",header=TRUE,sep=",")
+
+# Eliminando columan cargada como X
+df <- subset(df, select = -c(X))
+```
+
+```{r eliminación de % de Tomatometer y Audience Score}
+# Eliminando el simbolo de %
+df.Tomatometer <- as.integer(str_remove_all(df$Tomatometer, "%"))
+df.Audience.score <- as.integer(str_remove_all(df$Audience.score, "%"))
+
+#Agregando variables normalizadas al dataframe original
+df$Tomatometer <- df.Tomatometer 
+df$Audience.score <- df.Audience.score
+```
+
+
+```{r tratamieto de la variable rating}
+
+df.Rating <- str_remove_all(df$Rating, "\\([a-zA-Z \\.,|/&-]*\\)") 
+
+# agregando la variable Rating al dataframe original
+df$Rating <- df.Rating
+df
+
+```
+
+```{r Tratamiento de la variable Genre}
+df.Genre <- df$Genre
+#levels(factor(df.Genre))
+
+# dejando solo un genero para cada pelicula.
+df.Genre <-str_remove_all(df$Genre, ",[a-zA-Z,]*")
+df.Genre
+#levels(factor(df.Genre))
+
+# agregando la variable Genre al dataframe original
+df$Genre <- df.Genre
+df
+```
+
+Estudios de Valores perdidos y tratamiento de los mismos
+
+```{r Variable Tomatometer}
+
+# Conteo de NA
+summary(df$Tomatometer)
+# Hay 47 NA en tomatometer (se podrían eliminar)
+
+
+
+```
+
+```{r variable Auience Score}
+
+summary(df$Audience.score)
+#hay 378 NA en audience Score
+```
+
+```{r variable Rating}
+# donde no haya rating, se agregará la clasificación G (público general)
+
+df$Rating <- na_if(df$Rating, "")
+df$Rating[is.na(df$Rating)] <- "G"
+df
+```
+
+Gráficas de las variables
+
+```{r graficas de variables}
+
+plot1 <- ggplot(df, aes(Tomatometer)) + geom_histogram(binwidth=2)
+plot2 <- ggplot(df, aes(Audience.score)) + geom_histogram(binwidth = 2)
+plot3 <- ggplot(df, aes(Rating)) + geom_bar()
+plot4 <- ggplot(df, aes(Genre)) + geom_bar() + coord_flip()
+
+ggarrange(plot1, plot2, plot3)
+plot4
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
