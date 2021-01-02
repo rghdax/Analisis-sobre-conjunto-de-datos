@@ -13,7 +13,6 @@ library(stringr)
 library(dplyr)
 library(ggplot2)
 library(ggpubr)
-
 ```
 
 ## R Markdown
@@ -22,18 +21,41 @@ library(ggpubr)
 
 df <- read.csv(file="https://raw.githubusercontent.com/dbagan13/WebScrapping/main/csv/recogiendo_tomates.csv",header=TRUE,sep=",")
 
-# Eliminando columan cargada como X
+# Eliminando columna cargada como X
 df <- subset(df, select = -c(X))
 ```
 
-```{r eliminación de % de Tomatometer y Audience Score}
-# Eliminando el simbolo de %
+```{r Limpieza de variable Tomatometer}
+
+# Eliminando simbolo %
 df.Tomatometer <- as.integer(str_remove_all(df$Tomatometer, "%"))
+
+# Agregando la variable Tomatometer sin simbolo al dataset original
+df$Tomatometer <- df.Tomatometer 
+
+# Conteo de NA
+summary(df$Tomatometer)
+
+# Eliminando NA de Tomatometer
+df <- df[complete.cases(df$Tomatometer), ]
+
+```
+
+```{r Limpieza variable Audience Score}
+
+# Eliminando simbolo % 
 df.Audience.score <- as.integer(str_remove_all(df$Audience.score, "%"))
 
-#Agregando variables normalizadas al dataframe original
-df$Tomatometer <- df.Tomatometer 
+# Agregando la variable Audience Score sin símbolo al dataset original
 df$Audience.score <- df.Audience.score
+
+# conteo de NA 
+summary(df$Audience.score)
+
+# Eliminando NA's de variable Audience Score. 
+df <- df[complete.cases(df$Audience.score), ] 
+df
+
 ```
 
 
@@ -41,79 +63,82 @@ df$Audience.score <- df.Audience.score
 
 df.Rating <- str_remove_all(df$Rating, "\\([a-zA-Z \\.,|/&-]*\\)") 
 
-# agregando la variable Rating al dataframe original
+# Agregando la variable Rating al dataframe original
 df$Rating <- df.Rating
-df
 
+# Imputando el valor G en los valores vacios de la variable Rating
+df$Rating <- na_if(df$Rating, "")
+df$Rating[is.na(df$Rating)] <- "G"
+df
+```
+
+```{r Creación variable dicotómica a partir de rating}
+# Esta variable será 1 cuando la película pertenezca a la categoría 
+# G (público General) y será 0 cuando la pelicula pertenezca a cualquier
+# otra categoría que requiera de control parental.
+
+# Determinando cuales categorias hay
+levels(factor(df$Rating))
+
+p.control <- str_replace_all(df$Rating, "^G", "1")
+p.control <- str_replace_all(p.control,"NC-17|PG-13|PG|R|TV14|TVG|TVMA|TVPG",
+                                    "0")
+p.control <- as.integer(p.control)
+
+df["Parental.Control"] <- p.control
 ```
 
 ```{r Tratamiento de la variable Genre}
-df.Genre <- df$Genre
-#levels(factor(df.Genre))
-
-# dejando solo un genero para cada pelicula.
-df.Genre <-str_remove_all(df$Genre, ",[a-zA-Z,]*")
-df.Genre
-#levels(factor(df.Genre))
-
-# agregando la variable Genre al dataframe original
-df$Genre <- df.Genre
-df
-```
-
-Estudios de Valores perdidos y tratamiento de los mismos
-
-```{r Variable Tomatometer}
-
-# Conteo de NA
-summary(df$Tomatometer)
-# Hay 47 NA en tomatometer (se podrían eliminar)
+# Debido a que una misma película puede tener asignado más de un género, se
+# dividirá esta variable en tres: Gen1, Gen2 y Gen3 y se imputarán en estas
+# los tres principales géneros (si los tuviere) a los que pertenezca la 
+# película en cuestión, respectivamente
 
 
+df.Gen <- df$Genre
+# Generación variable Gen1
+df.Gen1 <- str_extract(df.Gen, "[a-zA-Z]*")
+#df.Gen1
 
-```
+# Generación variable Gen2
+df.Gen2 <- str_extract(df.Gen,",[a-zA-Z]*" )
+df.Gen2 <- str_remove_all(df.Gen2, ",")
+#df.Gen2
 
-```{r variable Auience Score}
+# Generación variable Gen3
+df.Gen3 <- str_extract(df.Gen, "([a-zA-Z]*,){2}[a-zA-Z]*")
+df.Gen3 <- str_extract(df.Gen3, ",[a-zA-Z]*$")
+df.Gen3<- str_remove_all(df.Gen3, ",")
+#df.Gen3
 
-summary(df$Audience.score)
-#hay 378 NA en audience Score
-```
+# Eliminando variable Genre y agregando variables nuevas Gen1, Gen2 y Gen3
+# al dataset original
+df <- subset(df, select = -c(Genre))
+df["Gen1"] <- df.Gen1
+df["Gen2"] <- df.Gen2
+df["Gen3"] <- df.Gen3
 
-```{r variable Rating}
-# donde no haya rating, se agregará la clasificación G (público general)
-
-df$Rating <- na_if(df$Rating, "")
-df$Rating[is.na(df$Rating)] <- "G"
+# Reordenando dataframe
+df <- df[c("Title","Tomatometer","Audience.score","Rating","Parental.Control",
+           "Gen1","Gen2","Gen3","Director","Producer","Writer",
+           "Release.Date..Theaters.", "Release.Date..Streaming.","Runtime",
+           "Production.Co")]
 df
 ```
 
 Gráficas de las variables
 
 ```{r graficas de variables}
-
 plot1 <- ggplot(df, aes(Tomatometer)) + geom_histogram(binwidth=2)
 plot2 <- ggplot(df, aes(Audience.score)) + geom_histogram(binwidth = 2)
 plot3 <- ggplot(df, aes(Rating)) + geom_bar()
-plot4 <- ggplot(df, aes(Genre)) + geom_bar() + coord_flip()
+plot4 <- ggplot(df, aes(Parental.Control)) + geom_bar()
+plot5 <- ggplot(df, aes(Gen1)) + geom_bar() + coord_flip()
+plot6 <- ggplot(df, aes(Gen2)) + geom_bar() + coord_flip()
+plot7 <- ggplot(df, aes(Gen3)) + geom_bar() + coord_flip()
 
-ggarrange(plot1, plot2, plot3)
-plot4
+ggarrange(plot1, plot2, plot3, plot4)
+plot5
+plot6
+plot7
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
