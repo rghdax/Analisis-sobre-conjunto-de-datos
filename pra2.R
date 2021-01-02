@@ -1,30 +1,38 @@
 df <- read.csv(file="https://raw.githubusercontent.com/dbagan13/WebScrapping/main/csv/recogiendo_tomates.csv",header=TRUE,sep=",")
 str(df)
+df$X <- NULL 
 dim(df)
 colSums(is.na(df))
 colSums(df=="")
 colSums(df=="NaN")
 
+#Tratamiento inicial de nulos y cadenas vacías
+df$Rating[df$Rating==""] <- NA
+df$Genre[df$Genre==""] <- NA
+df$Director[df$Director==""] <- NA
+df$Producer[df$Producer==""] <- NA
+df$Writer[df$Writer==""] <- NA
+df$Production.Co[df$Production.Co==""] <- NA
 
 #Runtime
 horas <- as.integer(substr(df$Runtime, 1, 1))    
 minutos <- as.integer(substr(df$Runtime, 3, 4)) 
+minutos[is.na(minutos)] <- 0
 runtime <- 60*horas+minutos
-df$Runtime <- runtime
+df$Runtime <- as.integer(runtime)
 summary(df$Runtime)
 #Fechas
-colnames(df)[10] <- "Release.Date.Theaters"
-colnames(df)[11] <- "Release.Date.Streamings"
+colnames(df)[9] <- "Release.Date.Theaters"
+colnames(df)[10] <- "Release.Date.Streamings"
 dim(df[df$Release.Date.Streamings=="",])
 dim(df[df$Release.Date.Theaters=="",])
 dim(df[df$Release.Date.Streamings=="" & !df$Release.Date.Theaters=="",])
 dim(df[!df$Release.Date.Streamings=="" & df$Release.Date.Theaters=="",])
 dim(df[df$Release.Date.Streamings=="" & df$Release.Date.Theaters=="",])
-
+head(df$Release.Date.Streamings)
 
 library(stringr)
 #-----------Streamings-------------
-
 #Separacion fecha
 months <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug","Sep", "Oct", "Nov", "Dec" )
 streamings.year <-  as.integer(str_sub(df$Release.Date.Streamings, -4, -1)) 
@@ -96,3 +104,11 @@ df$theaters.seasons <- theaters$seasons
 df$Release.Date.Theaters <- NULL
 
 str(df)
+
+head(summary(sort(as.factor(df$Director))),24)
+df$Director[df$Director=="" | df$Director=="UnknownDirector"] <- NA
+head(summary(sort(as.factor(df$Writer))),24)
+head(summary(sort(as.factor(df$Producer))),24)
+head(summary(sort(as.factor(df$Production.Co))),24)
+
+
