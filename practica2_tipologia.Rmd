@@ -38,8 +38,17 @@ summary(df$Tomatometer)
 
 # Eliminando NA de Tomatometer
 df <- df[complete.cases(df$Tomatometer), ]
-
 ```
+
+```{r Creación de la variable Fresh}
+# La variable Fresh será igual a 1 cuando el Tomatometer sea >60 y 0 en caso
+# contrario
+
+df.fresh <- df$Tomatometer
+df.fresh[df.fresh < 60] <- 0
+df.fresh[df.fresh >= 60] <- 1
+df$Fresh <- df.fresh
+``` 
 
 ```{r Limpieza variable Audience Score}
 
@@ -55,9 +64,7 @@ summary(df$Audience.score)
 # Eliminando NA's de variable Audience Score. 
 df <- df[complete.cases(df$Audience.score), ] 
 df
-
 ```
-
 
 ```{r tratamieto de la variable rating}
 
@@ -94,7 +101,6 @@ df["Parental.Control"] <- p.control
 # los tres principales géneros (si los tuviere) a los que pertenezca la 
 # película en cuestión, respectivamente
 
-
 df.Gen <- df$Genre
 # Generación variable Gen1
 df.Gen1 <- str_extract(df.Gen, "[a-zA-Z]*")
@@ -119,10 +125,10 @@ df["Gen2"] <- df.Gen2
 df["Gen3"] <- df.Gen3
 
 # Reordenando dataframe
-df <- df[c("Title","Tomatometer","Audience.score","Rating","Parental.Control",
-           "Gen1","Gen2","Gen3","Director","Producer","Writer",
-           "Release.Date..Theaters.", "Release.Date..Streaming.","Runtime",
-           "Production.Co")]
+df <- df[c("Title","Tomatometer","Fresh","Audience.score","Rating",
+           "Parental.Control","Gen1","Gen2","Gen3","Director","Producer",
+           "Writer","Release.Date..Theaters.", "Release.Date..Streaming.",
+           "Runtime","Production.Co")]
 df
 ```
 
