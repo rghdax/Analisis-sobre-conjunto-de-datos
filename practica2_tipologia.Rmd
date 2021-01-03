@@ -23,6 +23,12 @@ df <- read.csv(file="https://raw.githubusercontent.com/dbagan13/WebScrapping/mai
 
 # Eliminando columna cargada como X
 df <- subset(df, select = -c(X))
+
+#Tratamiento inicial de nulos y cadenas vacías
+df$Director[df$Director==""] <- NA
+df$Producer[df$Producer==""] <- NA
+df$Writer[df$Writer==""] <- NA
+df$Production.Co[df$Production.Co==""] <- NA
 ```
 
 ```{r Limpieza de variable Tomatometer}
@@ -38,6 +44,7 @@ summary(df$Tomatometer)
 
 # Eliminando NA de Tomatometer
 df <- df[complete.cases(df$Tomatometer), ]
+
 ```
 
 ```{r Creación de la variable Fresh}
@@ -49,6 +56,7 @@ df.fresh[df.fresh < 60] <- 0
 df.fresh[df.fresh >= 60] <- 1
 df$Fresh <- df.fresh
 ``` 
+
 
 ```{r Limpieza variable Audience Score}
 
@@ -63,8 +71,8 @@ summary(df$Audience.score)
 
 # Eliminando NA's de variable Audience Score. 
 df <- df[complete.cases(df$Audience.score), ] 
-df
 ```
+
 
 ```{r tratamieto de la variable rating}
 
@@ -76,7 +84,6 @@ df$Rating <- df.Rating
 # Imputando el valor G en los valores vacios de la variable Rating
 df$Rating <- na_if(df$Rating, "")
 df$Rating[is.na(df$Rating)] <- "G"
-df
 ```
 
 ```{r Creación variable dicotómica a partir de rating}
@@ -101,6 +108,7 @@ df["Parental.Control"] <- p.control
 # los tres principales géneros (si los tuviere) a los que pertenezca la 
 # película en cuestión, respectivamente
 
+
 df.Genre <- df$Genre
 # Generación variable Genre1
 df.Genre1 <- str_extract(df.Genre, "[a-zA-Z]*")
@@ -109,26 +117,139 @@ df.Genre1 <- str_extract(df.Genre, "[a-zA-Z]*")
 # Generación variable Genre2
 df.Genre2 <- str_extract(df.Genre,",[a-zA-Z]*" )
 df.Genre2 <- str_remove_all(df.Genre2, ",")
-#df.Genre2
+#df.Gen2
 
-# Generación variable Genre3
+# Generación variable Gen3
 df.Genre3 <- str_extract(df.Genre, "([a-zA-Z]*,){2}[a-zA-Z]*")
 df.Genre3 <- str_extract(df.Genre3, ",[a-zA-Z]*$")
 df.Genre3<- str_remove_all(df.Genre3, ",")
-#df.Genre3
+#df.Gen3
 
-# Eliminando variable Genre y agregando variables nuevas Genre1, Genre2 y Genre3
+# Eliminando variable Genre y agregando variables nuevas Gen1, Gen2 y Gen3
 # al dataset original
 df <- subset(df, select = -c(Genre))
 df["Genre1"] <- df.Genre1
 df["Genre2"] <- df.Genre2
 df["Genre3"] <- df.Genre3
+```
 
+```{r Tratamiento variable Runtime}
+horas <- as.integer(substr(df$Runtime, 1, 1))
+minutos <- as.integer(substr(df$Runtime, 3, 4)) 
+minutos[is.na(minutos)] <- as.integer(str_sub(df$Runtime[is.na(minutos)],
+                                              -2, -2)) 
+minutos[is.na(minutos)] <- 0
+runtime <- 60*horas+minutos
+df$Runtime <- as.integer(runtime)
+summary(df$Runtime)
+```
+
+```{r Comprobación de características de variables Release Date}
+colnames(df)[8] <- "Release.Date.Theaters"
+colnames(df)[9] <- "Release.Date.Streamings"
+dim(df[df$Release.Date.Streamings=="",])
+dim(df[df$Release.Date.Theaters=="",])
+dim(df[df$Release.Date.Streamings=="" & !df$Release.Date.Theaters=="",])
+dim(df[!df$Release.Date.Streamings=="" & df$Release.Date.Theaters=="",])
+dim(df[df$Release.Date.Streamings=="" & df$Release.Date.Theaters=="",])
+```
+
+```{r Limpieza variable Release.Date.Streaming}
+#Separacion fecha
+months <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug","Sep",
+            "Oct", "Nov", "Dec" )
+streamings.year <-  as.integer(str_sub(df$Release.Date.Streamings, -4, -1)) 
+streamings.month <-  substr(df$Release.Date.Streamings, 1, 3)
+streamings.day <-  as.integer(gsub(",","",substr(df$Release.Date.Streamings,
+                                                 4, 5))) 
+streamings.month <- match(streamings.month,months)
+streamings.date <- paste(str_sub(streamings.year, -2, -1),streamings.month,
+                         streamings.day,sep="/")
+streamings.date <- as.Date(streamings.date,format="%D")
+```
+
+```{r Creación Variable Realise.IsWide}
+#Wide o limited
+theaters <- df$Release.Date.Theaters
+release_type <- df$Release.Date.Theaters
+release_type[str_sub(release_type, -4, -1)=="wide"] <- 1
+release_type[str_sub(release_type, -7, -1)=="limited"] <- 0
+df$Release.isWide <- as.integer(release_type)
+```
+
+```{r Limpieza Release.Date.Theaters}
+#Limpieza
+theaters <- str_remove_all(theaters,"limited")
+theaters <- str_remove_all(theaters,"wide")
+theaters <- str_sub(theaters, 1, -3)
+
+#Separacion fecha
+theaters.year <-  as.integer(str_sub(theaters, -4, -1)) 
+theaters.month <-  substr(theaters, 1, 3)
+theaters.day <-  as.integer(gsub(",","",substr(theaters, 4, 5))) 
+theaters.month <- match(theaters.month,months)
+theaters.date <- paste(str_sub(theaters.year, -2, -1),theaters.month,
+                       theaters.day,sep="/")
+theaters.date <- as.Date(theaters.date,format="%D")
+```
+
+```{r selección de primera fecha}
+na_date <-  as.Date("68/12/31",format="%D")
+theaters.date[is.na(theaters.date)] <- na_date
+streamings.date[is.na(streamings.date)] <- na_date
+df$Release.Date <- pmin(streamings.date, theaters.date)
+df$Release.Date[df$Release.Date==na_date] <- NA
+df$Release.YearDay <- as.integer(strftime(df$Release.Date, format = "%j"))
+df$Release.Year <- strftime(df$Release.Date, format = "%Y")
+```
+
+```{r Creación de variable Seasons}
+#Estación
+spring <-  as.integer(strftime("2020-03-21", format = "%j"))
+summer <-  as.integer(strftime("2020-06-22", format = "%j"))
+autumn <-  as.integer(strftime("2020-09-23", format = "%j"))
+winter <-  as.integer(strftime("2020-12-22", format = "%j"))
+df$Seasons[!is.na(df$Release.Year)] <- "winter"
+df$Seasons[df$Release.YearDay>spring] <- "spring" 
+df$Seasons[df$Release.YearDay>summer] <- "summer" 
+df$Seasons[df$Release.YearDay>autumn] <- "autumn" 
+df$Seasons[df$Release.YearDay>winter] <- "winter" 
+
+# Eliminando columnas YearDay, Release.Date.Streamings y Release.Date.Theaters
+df$Release.YearDay <- NULL
+df$Release.Date.Streamings <- NULL
+df$Release.Date.Theaters <- NULL
+```
+
+```{r Comprobación de variables Director, Writer, Producer y Production.Co}
+head(summary(sort(as.factor(df$Director))),24)
+df$Director[df$Director=="" | df$Director=="UnknownDirector"] <- NA
+head(summary(sort(as.factor(df$Writer))),24)
+head(summary(sort(as.factor(df$Producer))),24)
+head(summary(sort(as.factor(df$Production.Co))),24)
+(summary(sort(as.factor(df$Release.Year))))
+```
+
+
+```{r Creación de variable DirectorIsWriter}
+df$DirectorIsWriter<- (df$Director == df$Writer)
+df$DirectorIsWriter[df$DirectorIsWriter] <- 1
+df$DirectorIsWriter[!df$DirectorIsWriter] <- 0
+
+df$Production.Co[is.na(df$Production.Co)] <- df$Producer[is.na(df$Production.Co)]
+colnames(df)[9] <- "Production"
+df$Writer <- NULL
+df$Producer <- NULL
+```
+
+```{r Reordenando Dataframe}
 # Reordenando dataframe
 df <- df[c("Title","Tomatometer","Fresh","Audience.score","Rating",
-           "Parental.Control","Genre1","Genre2","Genre3","Director","Producer",
-           "Writer","Release.Date..Theaters.", "Release.Date..Streaming.",
-           "Runtime","Production.Co")]
+           "Parental.Control","Genre1","Genre2","Genre3","Director","Production",
+           "DirectorIsWriter","Runtime","Release.Date", "Release.Year",
+           "Seasons", "Release.isWide")]
+
+# Visualización del dataframe
 df
 ```
 
@@ -142,9 +263,41 @@ plot4 <- ggplot(df, aes(Parental.Control)) + geom_bar()
 plot5 <- ggplot(df, aes(Genre1)) + geom_bar() + coord_flip()
 plot6 <- ggplot(df, aes(Genre2)) + geom_bar() + coord_flip()
 plot7 <- ggplot(df, aes(Genre3)) + geom_bar() + coord_flip()
-
 ggarrange(plot1, plot2, plot3, plot4)
+
+ggplot(df, aes(Runtime)) + geom_boxplot() 
+ggplot(df, aes(Seasons)) + geom_bar() 
+ggplot(df, aes(Release.isWide)) + geom_bar() 
+#head(summary(sort(as.factor(df$Release.YearDay))),24)
+ggplot(df, aes(DirectorIsWriter)) + geom_bar() 
+ggplot(data=subset(df,!is.na(Release.Year)), 
+       aes(Release.Year)) + geom_bar() + coord_flip()
+
 plot5
 plot6
 plot7
+```
+
+```{r representación de relaciones}
+#Representacion de relaciones
+ggplot(df, aes(x=Runtime, y=Audience.score)) + geom_point() 
+ggplot(df, aes(x=Runtime, y=Tomatometer)) + geom_point() 
+ggplot(aes(y = Audience.score, x = Seasons), 
+       data = df) + geom_boxplot() + ggtitle("Audience score by season")
+ggplot(aes(y = Tomatometer, x = Seasons), 
+       data = df) + geom_boxplot() + ggtitle("Tomatometer by season")
+ggplot(aes(y = Audience.score, x = DirectorIsWriter), 
+       data = df) + geom_boxplot() + ggtitle("Director is writer")
+ggplot(aes(y = Tomatometer, x = DirectorIsWriter), 
+       data = df) + geom_boxplot() + ggtitle("Director is writer")
+ggplot(aes(y = Audience.score, x = Release.Year), 
+       data = subset(df,Release.Year>2005)) + geom_boxplot() + 
+       ggtitle("Audience score by year") + coord_flip()
+ggplot(aes(y = Tomatometer, x = Release.Year), 
+       data = subset(df,Release.Year>2005)) + geom_boxplot() + 
+       ggtitle("Audience score by year") + coord_flip()
+ggplot(aes(y = Audience.score, x = as.factor(Parental.Control)), 
+       data = df) + geom_boxplot() + ggtitle("Director is writer")
+ggplot(aes(y = Tomatometer, x = as.factor(Parental.Control)), 
+       data = df) + geom_boxplot() + ggtitle("Director is writer")
 ```
