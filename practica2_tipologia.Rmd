@@ -97,36 +97,36 @@ df["Parental.Control"] <- p.control
 
 ```{r Tratamiento de la variable Genre}
 # Debido a que una misma película puede tener asignado más de un género, se
-# dividirá esta variable en tres: Gen1, Gen2 y Gen3 y se imputarán en estas
+# dividirá esta variable en tres: Genre1, Genre2 y Genre3 y se imputarán en estas
 # los tres principales géneros (si los tuviere) a los que pertenezca la 
 # película en cuestión, respectivamente
 
-df.Gen <- df$Genre
-# Generación variable Gen1
-df.Gen1 <- str_extract(df.Gen, "[a-zA-Z]*")
-#df.Gen1
+df.Genre <- df$Genre
+# Generación variable Genre1
+df.Genre1 <- str_extract(df.Genre, "[a-zA-Z]*")
+#df.Genre1
 
-# Generación variable Gen2
-df.Gen2 <- str_extract(df.Gen,",[a-zA-Z]*" )
-df.Gen2 <- str_remove_all(df.Gen2, ",")
-#df.Gen2
+# Generación variable Genre2
+df.Genre2 <- str_extract(df.Genre,",[a-zA-Z]*" )
+df.Genre2 <- str_remove_all(df.Genre2, ",")
+#df.Genre2
 
-# Generación variable Gen3
-df.Gen3 <- str_extract(df.Gen, "([a-zA-Z]*,){2}[a-zA-Z]*")
-df.Gen3 <- str_extract(df.Gen3, ",[a-zA-Z]*$")
-df.Gen3<- str_remove_all(df.Gen3, ",")
-#df.Gen3
+# Generación variable Genre3
+df.Genre3 <- str_extract(df.Genre, "([a-zA-Z]*,){2}[a-zA-Z]*")
+df.Genre3 <- str_extract(df.Genre3, ",[a-zA-Z]*$")
+df.Genre3<- str_remove_all(df.Genre3, ",")
+#df.Genre3
 
-# Eliminando variable Genre y agregando variables nuevas Gen1, Gen2 y Gen3
+# Eliminando variable Genre y agregando variables nuevas Genre1, Genre2 y Genre3
 # al dataset original
 df <- subset(df, select = -c(Genre))
-df["Gen1"] <- df.Gen1
-df["Gen2"] <- df.Gen2
-df["Gen3"] <- df.Gen3
+df["Genre1"] <- df.Genre1
+df["Genre2"] <- df.Genre2
+df["Genre3"] <- df.Genre3
 
 # Reordenando dataframe
 df <- df[c("Title","Tomatometer","Fresh","Audience.score","Rating",
-           "Parental.Control","Gen1","Gen2","Gen3","Director","Producer",
+           "Parental.Control","Genre1","Genre2","Genre3","Director","Producer",
            "Writer","Release.Date..Theaters.", "Release.Date..Streaming.",
            "Runtime","Production.Co")]
 df
@@ -139,9 +139,9 @@ plot1 <- ggplot(df, aes(Tomatometer)) + geom_histogram(binwidth=2)
 plot2 <- ggplot(df, aes(Audience.score)) + geom_histogram(binwidth = 2)
 plot3 <- ggplot(df, aes(Rating)) + geom_bar()
 plot4 <- ggplot(df, aes(Parental.Control)) + geom_bar()
-plot5 <- ggplot(df, aes(Gen1)) + geom_bar() + coord_flip()
-plot6 <- ggplot(df, aes(Gen2)) + geom_bar() + coord_flip()
-plot7 <- ggplot(df, aes(Gen3)) + geom_bar() + coord_flip()
+plot5 <- ggplot(df, aes(Genre1)) + geom_bar() + coord_flip()
+plot6 <- ggplot(df, aes(Genre2)) + geom_bar() + coord_flip()
+plot7 <- ggplot(df, aes(Genre3)) + geom_bar() + coord_flip()
 
 ggarrange(plot1, plot2, plot3, plot4)
 plot5
