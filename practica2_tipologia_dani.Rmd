@@ -422,9 +422,8 @@ Se realizarán dos contrastes de hipótesis para tratar de responder dos pregunt
 
    - ¿Las películas dirigidas por el propio escritor son mejores (tienen mayor tomatometer) que las que tienen un director distinto? 
 Se utilizarán las variables `Tomatometer` y `DirectorisWriter`.
-        
-   - ¿En otoño se estrenan más películas de horror que en las demás estaciones?
-Se utilizarán las variables `Release.Season` y `Genre1`.
+   
+   
 
 # 4.2 Comprobación de la normalidad y homogeneidad de la varianza.
 
