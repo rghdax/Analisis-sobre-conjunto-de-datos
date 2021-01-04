@@ -109,7 +109,7 @@ df$Production.Co[df$Production.Co==""] <- NA
 
 Se eliminó la columna `X` ya que realmente no aporta al análisis. Se le asigno el valor `NA` a todos los registros que contienen cadenas vacias o nulos.
 
-#### 3.1 Limpieza varibale Tomatometer.
+#### Limpieza varibale Tomatometer.
 
 ```{r Limpieza de variable Tomatometer}
 
@@ -128,7 +128,7 @@ df <- df[complete.cases(df$Tomatometer), ]
 
 Para el caso de la variable `Tomatometer`, se decidió remover el simbolo de %, para poder trabajar la variable como números enteros. También, por ser una variable de interés para futuros análisis y que sólo posee 47 `NA`, se decidió eliminar estos registros.
 
-#### 3.2 Creación de la variable Fresh.
+#### Creación de la variable Fresh.
 
 Como se comento inicialmente, esta variable se calculará siguiendo el criterio establecido en la propia pág de Rotten Tomatoes; es decir:
 
@@ -146,7 +146,7 @@ df.fresh[df.fresh != "Yes"] <- "No"
 df$Fresh <- df.fresh
 ``` 
 
-#### 3.3 Limpieza variable Audience.score.
+#### Limpieza variable Audience.score.
 
 Al igual que se hizo con la varible `Tomatometer`, a esta varible le quitaremos el simbolo de % y eliminaremos los `NA` (331 registros), ya que esta es también una variable de interés para futuros analásis.
 
@@ -165,7 +165,7 @@ summary(df$Audience.score)
 df <- df[complete.cases(df$Audience.score), ] 
 ```
 
-#### 3.4 Limpieza de variable Rating.
+#### Limpieza de variable Rating.
 
 En este caso, limpiaremos la variable tal que solo quede el tipo de clasificación que pertenezca cada pelicula: `G`, `NC-17`, `PG`, `PG-13`, `R`, `TV14`, `TVG`, `TVMA` ó `TVPG`.
 
@@ -184,7 +184,7 @@ df$Rating[is.na(df$Rating)] <- "G"
 
 levels(factor(df$Rating))
 ```
-#### 3.4.1 Creación de variable Parental.Control
+#### Creación de variable Parental.Control
 
 Esta variable se creo a partir de la variable `Rating`. Es una variable dicotómica donde el valor será 1 cuando la película pertenezca a la categoría G (público General) y será 0 cuando la pelicula pertenezca a cualquier otra categoría que requiera de algún tipo de control parental.
 
@@ -211,7 +211,7 @@ ggarrange(plot1, plot2, plot3)
 ggarrange(plot4, plot5)
 ```
 
-#### 3.5 Tratamiento de variable Genre.
+#### Tratamiento de variable Genre.
 
 Debido a que una misma película puede tener asignado más de un género, se dividirá esta variable en tres: Genre1, Genre2 y Genre3 y se imputarán en estas los tres principales géneros (si los tuviere) a los que pertenezca la película en cuestión, respectivamente
 
@@ -241,7 +241,7 @@ df["Genre2"] <- df.Genre2
 df["Genre3"] <- df.Genre3
 ```
 
-#### 3.6 Tratamiento variable Runtime.
+#### Tratamiento variable Runtime.
 
 El formato original de esta variable era una `string` que represetaba la hora y los minutos tal que, por ejemplo: 1h30m. Este formato se cambió y se colocó la duración de la película en minutos.
 
@@ -260,7 +260,7 @@ runtime[is.na (runtime)] <- mean(runtime, na.rm = TRUE)
 df$Runtime <- as.integer(runtime)
 ```
 
-#### 3.7 Tratamiento de variables Release.Date.Streaming y Release.Date. Theater. Creación de variable Realese.IsWide
+#### Tratamiento de variables Release.Date.Streaming y Release.Date. Theater. Creación de variable Realese.IsWide
 
 ```{r Comprobación de características de variables Release Date}
 # Corrigiendo nombre de variables.
@@ -369,7 +369,7 @@ De lo observado en los gráficos se puede detallar que:
 - En cuanto a la variable `Release.IsWide`, se observa que existe casi el doble de películas que sólo tiene un estreno local. Sólo al rededor de 2000 películas tuvieron un estreno mundial.
 
 
-#### 3.8 Tratamiento de variables Director, Producition.Co, Producer y Writer.
+#### Tratamiento de variables Director, Producition.Co, Producer y Writer.
 
 Para finalizar la limpieza de los datos, se creará la variable DirectorIsWriter, que servirá para determinar si el director es la misma persona que el escritor. Esto, para posteriores análisis, será interesante.
 
