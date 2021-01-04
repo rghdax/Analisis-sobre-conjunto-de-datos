@@ -1,0 +1,481 @@
+---
+title: "practica Tipologia"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r librerias a usar}
+library(knitr)
+library(stringr)
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+library(corrplot)
+require(gridExtra)
+```
+
+## R Markdown
+
+# 1 Descripción del dataset
+
+Para el desarrollo de esta práctica, se ha seleleccionado el dataset **Listado de películas** extraído en la primera práctica de la asignatura, desde la pagina web Rotten Tomatoes (*https://www.rottentomatoes.com*). Este dataset ha sido publicado en Zenodo con el DOI: 10.5281/zenodo.4265051 y puede ser visualizado en el siguiente link: *https://zenodo.org/record/4265051#.X6mORGgReUk*.
+
+Este juego de datos se ha elegido por varios motivos, además de nuestro interés por el cine. En primer lugar, porque ha sido creado por nosotros mismos como resultado de la primera práctica de la asignatura. En segundo lugar, porque este juego de datos es especialmente apropiado para llevar a cabo el proceso de limpieza; por una parte, un porcentaje elevado de las variables debe ser limpiado para facilitar su tratamiento posterior, y por otra parte, hay una buena cantidad de variables derivadas que se pueden crear a partir de las ya existentes. Por último, porque es adecuado para plantear difrentes tipos de problemas, como regresión (predecir la puntuación de una película), clasificación (clasificar las películas en buenas y malas), o establecer relaciones entre las distintas variables o contrastes de hipótesis, para contestar dudas como: ¿las películas de Netflix son significativamente mejores que las de HBO?, ¿las películas de drama son suelen er más largas que las de comedia? o ¿en invierno se estrenan más películas que en verano?
+
+El juego de datos contiene información sobre todas las películas disponibles en la página web de críticas Rotten Tomatoes. Las variables que contiene son las siguientes:
+
+   - X: número de película.
+    
+   - Title: título de la película.
+    
+   - Tomatometer: puntuación (sobre 100%) que otorga la propia página a la película, basada en la opinión de cientos de críticos. Concretamente, se trata del porcentaje de críticos que han puntuado positivamente la película.
+    
+   - Audience score: porcentaje de usuarios de la web que han valorado la película positivamente.
+    
+   - Rating: clasificación por edades de la película y motivo de la clasificación. Por ejemplo, R(SexualContent|SomeDrugMaterial) indicaría una clasificación de “Restringido” (los menores de 17 años acompañados de un adulto) por contenido sexual y drogas.
+    
+   - Genre: género o géneros de la película.
+    
+   - Director: director de la película.
+    
+   - Producer: productor de la película.
+    
+   - Writer: escritor del guión de la película.
+    
+   - Release Date (Theaters): fecha de lanzamiento en cines.
+    
+   - Release Date (Streaming): fecha de lanzamiento en streaming.
+    
+   - Runtime: duración de la película.
+    
+   - Production Co: compañía de producción.
+   
+# 2 Integración y selección de los datos de interés a analizar
+
+En cuanto a las selección de datos de interes a analizar, cabe mencionar que, en el momento de recogida de los datos, ya se realizó una selección de las variables que podrían ser útiles, descartando aquellas sin valor aparente, como *Aspect Ratio*, o con una cantidad de datos vacíos demasiado elevada, como *Box Office*.
+
+Los campos de interés a analizar en los que no se realizará ninguna modificación, salvo una limpieza simple, son: Title, Tomatometer, Audience score, Rating, Director y Runtime.
+
+Los siguientes campos se crearán a partir de otros o se dividirán en varios: 
+
+   - Fresh. La página web Rotten Tomatoes otorga la clasificación *Fresh* a la películas con más del 60% de crítica positiva, mientras que las demás son clasificadas como *rotten* (podridas).
+    
+   - Parental.Control: se trata de un atributo categórico dicotómico, creado a partir de la información del campo Rating. Indica si una película tiene alguna restricción de edad o no.
+    
+   - Genre: se dividirá la variable en 3 diferentes: **género primario, secundario y terciario**.
+    
+   - Production: contiene la compañía de producción de la película, o el nombre del productor en caso de que esta no figure en los datos.
+    
+   - Release.isWide: atributo categórico dicotómico. Indica si el estreno de una película ha sido *wide* (estenada en la mayoría de cines simultáneamente) o *limited* (sólo en unos pocos cines). Se obtiene a partir de Release.Date.Theaters.
+    
+   - Release.Date: fecha de lanzamiento de la película, ya sea en cines o streaming.
+    
+   - Release.Season: estación de lanzamiento de la película.
+    
+   - DirectorIsWriter: atributo categórico dicotómico. Indica si el director es también el escritor de la película.
+
+```{r carga de fichero con datos}
+
+df <- read.csv(file="https://raw.githubusercontent.com/dbagan13/WebScrapping/main/csv/recogiendo_tomates.csv",header=TRUE,sep=",")
+
+# Eliminando columna cargada como X
+df <- subset(df, select = -c(X))
+
+#Tratamiento inicial de nulos y cadenas vacías
+df$Director[df$Director==""] <- NA
+df$Producer[df$Producer==""] <- NA
+df$Writer[df$Writer==""] <- NA
+df$Production.Co[df$Production.Co==""] <- NA
+```
+
+```{r Limpieza de variable Tomatometer}
+
+# Eliminando simbolo %
+df.Tomatometer <- as.integer(str_remove_all(df$Tomatometer, "%"))
+
+# Agregando la variable Tomatometer sin simbolo al dataset original
+df$Tomatometer <- df.Tomatometer 
+
+# Conteo de NA
+summary(df$Tomatometer)
+
+# Eliminando NA de Tomatometer
+df <- df[complete.cases(df$Tomatometer), ]
+
+```
+
+```{r Creación de la variable Fresh}
+# La variable Fresh será igual a 1 cuando el Tomatometer sea >60 y 0 en caso
+# contrario
+
+df.fresh <- df$Tomatometer
+df.fresh[df$Tomatometer < 60] <- "No"
+df.fresh[df$Tomatometer >= 60] <- "Yes"
+df$Fresh <- df.fresh
+``` 
+
+
+```{r Limpieza variable Audience Score}
+
+# Eliminando simbolo % 
+df.Audience.score <- as.integer(str_remove_all(df$Audience.score, "%"))
+
+# Agregando la variable Audience Score sin símbolo al dataset original
+df$Audience.score <- df.Audience.score
+
+# conteo de NA 
+summary(df$Audience.score)
+
+# Eliminando NA's de variable Audience Score. 
+df <- df[complete.cases(df$Audience.score), ] 
+```
+
+
+```{r tratamieto de la variable rating}
+
+df.Rating <- str_remove_all(df$Rating, "\\([a-zA-Z \\.,|/&-]*\\)") 
+
+# Agregando la variable Rating al dataframe original
+df$Rating <- df.Rating
+
+# Imputando el valor G en los valores vacios de la variable Rating
+df$Rating <- na_if(df$Rating, "")
+df$Rating[is.na(df$Rating)] <- "G"
+```
+
+```{r Creación variable dicotómica a partir de rating}
+# Esta variable será 1 cuando la película pertenezca a la categoría 
+# G (público General) y será 0 cuando la pelicula pertenezca a cualquier
+# otra categoría que requiera de control parental.
+
+# Determinando cuales categorias hay
+levels(factor(df$Rating))
+
+p.control <- str_replace_all(df$Rating, "^G", "Yes")
+p.control <- str_replace_all(p.control,"NC-17|PG-13|PG|R|TV14|TVG|TVMA|TVPG",
+                                    "No")
+df["Parental.Control"] <- p.control
+```
+
+```{r Tratamiento de la variable Genre}
+# Debido a que una misma película puede tener asignado más de un género, se
+# dividirá esta variable en tres: Genre1, Genre2 y Genre3 y se imputarán en estas
+# los tres principales géneros (si los tuviere) a los que pertenezca la 
+# película en cuestión, respectivamente
+
+
+df.Genre <- df$Genre
+# Generación variable Genre1
+df.Genre1 <- str_extract(df.Genre, "[a-zA-Z]*")
+#df.Genre1
+
+# Generación variable Genre2
+df.Genre2 <- str_extract(df.Genre,",[a-zA-Z]*" )
+df.Genre2 <- str_remove_all(df.Genre2, ",")
+#df.Gen2
+
+# Generación variable Gen3
+df.Genre3 <- str_extract(df.Genre, "([a-zA-Z]*,){2}[a-zA-Z]*")
+df.Genre3 <- str_extract(df.Genre3, ",[a-zA-Z]*$")
+df.Genre3<- str_remove_all(df.Genre3, ",")
+#df.Gen3
+
+# Eliminando variable Genre y agregando variables nuevas Gen1, Gen2 y Gen3
+# al dataset original
+df <- subset(df, select = -c(Genre))
+df["Genre1"] <- df.Genre1
+df["Genre2"] <- df.Genre2
+df["Genre3"] <- df.Genre3
+```
+
+```{r Tratamiento variable Runtime}
+horas <- as.integer(substr(df$Runtime, 1, 1))
+minutos <- as.integer(substr(df$Runtime, 3, 4)) 
+minutos[is.na(minutos)] <- as.integer(str_sub(df$Runtime[is.na(minutos)],
+                                              -2, -2)) 
+minutos[is.na(minutos)] <- 0
+runtime <- 60*horas+minutos
+df$Runtime <- as.integer(runtime)
+summary(df$Runtime)
+```
+
+```{r Comprobación de características de variables Release Date}
+colnames(df)[8] <- "Release.Date.Theaters"
+colnames(df)[9] <- "Release.Date.Streamings"
+dim(df[df$Release.Date.Streamings=="",])
+dim(df[df$Release.Date.Theaters=="",])
+dim(df[df$Release.Date.Streamings=="" & !df$Release.Date.Theaters=="",])
+dim(df[!df$Release.Date.Streamings=="" & df$Release.Date.Theaters=="",])
+dim(df[df$Release.Date.Streamings=="" & df$Release.Date.Theaters=="",])
+```
+
+```{r Limpieza variable Release.Date.Streaming}
+#Separacion fecha
+months <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug","Sep",
+            "Oct", "Nov", "Dec" )
+streamings.year <-  as.integer(str_sub(df$Release.Date.Streamings, -4, -1)) 
+streamings.month <-  substr(df$Release.Date.Streamings, 1, 3)
+streamings.day <-  as.integer(gsub(",","",substr(df$Release.Date.Streamings,
+                                                 4, 5))) 
+streamings.month <- match(streamings.month,months)
+streamings.date <- paste(str_sub(streamings.year, -2, -1),streamings.month,
+                         streamings.day,sep="/")
+streamings.date <- as.Date(streamings.date,format="%D")
+```
+
+```{r Creación Variable Realise.IsWide}
+#Wide o limited
+theaters <- df$Release.Date.Theaters
+release_type <- df$Release.Date.Theaters
+release_type[str_sub(release_type, -4, -1)=="wide"] <- "Yes"
+release_type[str_sub(release_type, -7, -1)=="limited"] <- "no"
+df$Release.isWide <- release_type
+```
+
+```{r Limpieza Release.Date.Theaters}
+#Limpieza
+theaters <- str_remove_all(theaters,"limited")
+theaters <- str_remove_all(theaters,"wide")
+theaters <- str_sub(theaters, 1, -3)
+
+#Separacion fecha
+theaters.year <-  as.integer(str_sub(theaters, -4, -1)) 
+theaters.month <-  substr(theaters, 1, 3)
+theaters.day <-  as.integer(gsub(",","",substr(theaters, 4, 5))) 
+theaters.month <- match(theaters.month,months)
+theaters.date <- paste(str_sub(theaters.year, -2, -1),theaters.month,
+                       theaters.day,sep="/")
+theaters.date <- as.Date(theaters.date,format="%D")
+```
+
+```{r selección de primera fecha}
+na_date <-  as.Date("68/12/31",format="%D")
+theaters.date[is.na(theaters.date)] <- na_date
+streamings.date[is.na(streamings.date)] <- na_date
+df$Release.Date <- pmin(streamings.date, theaters.date)
+df$Release.Date[df$Release.Date==na_date] <- NA
+df$Release.YearDay <- as.integer(strftime(df$Release.Date, format = "%j"))
+df$Release.Year <- strftime(df$Release.Date, format = "%Y")
+```
+
+```{r Creación de variable Seasons}
+#Estación
+spring <-  as.integer(strftime("2020-03-21", format = "%j"))
+summer <-  as.integer(strftime("2020-06-22", format = "%j"))
+autumn <-  as.integer(strftime("2020-09-23", format = "%j"))
+winter <-  as.integer(strftime("2020-12-22", format = "%j"))
+df$Seasons[!is.na(df$Release.Year)] <- "winter"
+df$Seasons[df$Release.YearDay>spring] <- "spring" 
+df$Seasons[df$Release.YearDay>summer] <- "summer" 
+df$Seasons[df$Release.YearDay>autumn] <- "autumn" 
+df$Seasons[df$Release.YearDay>winter] <- "winter" 
+
+# Eliminando columnas YearDay, Release.Date.Streamings y Release.Date.Theaters
+df$Release.YearDay <- NULL
+df$Release.Date.Streamings <- NULL
+df$Release.Date.Theaters <- NULL
+```
+
+```{r Comprobación de variables Director, Writer, Producer y Production.Co}
+head(summary(sort(as.factor(df$Director))),24)
+df$Director[df$Director=="" | df$Director=="UnknownDirector"] <- NA
+head(summary(sort(as.factor(df$Writer))),24)
+head(summary(sort(as.factor(df$Producer))),24)
+head(summary(sort(as.factor(df$Production.Co))),24)
+(summary(sort(as.factor(df$Release.Year))))
+```
+
+
+```{r Creación de variable DirectorIsWriter}
+df$DirectorIsWriter<- (df$Director == df$Writer)
+df$DirectorIsWriter[df$DirectorIsWriter] <- "Yes"
+df$DirectorIsWriter[df$DirectorIsWriter=="FALSE"] <- "No"
+
+df$Production.Co[is.na(df$Production.Co)] <- df$Producer[is.na(df$Production.Co)]
+colnames(df)[9] <- "Production"
+df$Writer <- NULL
+df$Producer <- NULL
+```
+
+```{r Reordenando Dataframe}
+# Reordenando dataframe
+df <- df[c("Title","Tomatometer","Fresh","Audience.score","Rating",
+           "Parental.Control","Genre1","Genre2","Genre3","Director","Production",
+           "DirectorIsWriter","Runtime","Release.Date", "Release.Year",
+           "Seasons", "Release.isWide")]
+
+# Visualización del dataframe
+df
+```
+
+Gráficas de las variables
+
+```{r graficas de variables}
+plot1 <- ggplot(df, aes(Tomatometer)) + geom_histogram(binwidth=2)
+plot2 <- ggplot(df, aes(Audience.score)) + geom_histogram(binwidth = 2)
+plot3 <- ggplot(df, aes(Rating)) + geom_bar()
+plot4 <- ggplot(df, aes(Parental.Control)) + geom_bar()
+plot5 <- ggplot(df, aes(Genre1)) + geom_bar() + coord_flip()
+plot6 <- ggplot(df, aes(Genre2)) + geom_bar() + coord_flip()
+plot7 <- ggplot(df, aes(Genre3)) + geom_bar() + coord_flip()
+ggarrange(plot1, plot2, plot3, plot4)
+
+ggplot(df, aes(Runtime)) + geom_boxplot() 
+ggplot(df, aes(Seasons)) + geom_bar() 
+ggplot(df, aes(Release.isWide)) + geom_bar() 
+#head(summary(sort(as.factor(df$Release.YearDay))),24)
+ggplot(df, aes(DirectorIsWriter)) + geom_bar() 
+ggplot(data=subset(df,!is.na(Release.Year)), 
+       aes(Release.Year)) + geom_bar() + coord_flip()
+
+plot5
+plot6
+plot7
+```
+
+```{r representación de relaciones}
+#Representacion de relaciones
+ggplot(df, aes(x=Runtime, y=Audience.score)) + geom_point() 
+ggplot(df, aes(x=Runtime, y=Tomatometer)) + geom_point() 
+ggplot(aes(y = Audience.score, x = Seasons), 
+       data = df) + geom_boxplot() + ggtitle("Audience score by season")
+ggplot(aes(y = Tomatometer, x = Seasons), 
+       data = df) + geom_boxplot() + ggtitle("Tomatometer by season")
+ggplot(aes(y = Audience.score, x = as.factor(DirectorIsWriter)), 
+       data = df) + geom_boxplot() + ggtitle("Director is writer")
+ggplot(aes(y = Tomatometer, x = as.factor(DirectorIsWriter)), 
+       data = df) + geom_boxplot() + ggtitle("Director is writer")
+ggplot(aes(y = Audience.score, x = Release.Year), 
+       data = subset(df,Release.Year>2005)) + geom_boxplot() + 
+       ggtitle("Audience score by year") + coord_flip()
+ggplot(aes(y = Tomatometer, x = Release.Year), 
+       data = subset(df,Release.Year>2005)) + geom_boxplot() + 
+       ggtitle("Audience score by year") + coord_flip()
+ggplot(aes(y = Audience.score, x = as.factor(Parental.Control)), 
+       data = df) + geom_boxplot() + ggtitle("Director is writer")
+ggplot(aes(y = Tomatometer, x = as.factor(Parental.Control)), 
+       data = df) + geom_boxplot() + ggtitle("Director is writer")
+```
+
+
+# 4 Análisis de los datos.
+
+## 4.1. Selección de los grupos de datos que se quieren analizar/comparar (planificación de los análisis a aplicar)
+
+### Correlación
+
+En primer lugar, se realizará un análisis de la correlación entre las variables del juego de datos. Se utilizará una matriz de correlación para estimar las relaciones ente las variables numéricas del juego de datos (Audience Score, Tomatometer y Runtime).
+
+Además se presentarán gráficos con el fin de averiguar las relaciones de las variables con las puntuaciones de las películas y estimar su influencia.
+
+### Regresión
+
+Se realizará un análisis de regresión para predecir la Audicence Score de una película. Para ello se escogerán, a partir del análisis de correlación de las variables, cuáles son las variables de entrada que se utilizarán ente Parental.Control, Genre1, Director, Runtime, Production, Release.isWide, Release.Year, Release.Season y DirectorIsWriter.
+
+### Clasificación
+
+Se creará un modelo de clasificación para clasificar las películas según si son *fresh* o *rotten*, es decir, si tienen una crítica mayormente positiva o no (variable Fresh). Al igual que en el modelo de regresión, se seleccionarán las variables de entrada entre Parental.Control, Genre1, Director, Runtime, Production, Release.isWide, Release.Year, Release.Season y DirectorIsWriter.
+
+### Contraste de hipótesis
+
+Se realizarán dos contrastes de hipótesis para tratar de responder dos preguntas:
+
+   - ¿Las películas dirigidas por el propio escritor son mejores que las que tienen un director distinto? 
+Se utilizarán las variables Tomatometer y DirectorisWriter.
+        
+   - ¿En otoño se estrenan más películas de terror que en las demás estaciones?
+Se utilizarán las variables Release.Season y Genre1.
+
+
+## 4.3 Aplicación de pruebas estadísticas para comparar los grupos de datos
+
+### Correlación
+
+Como se ha comentado en el apartado 4.1, en primer lugar se crea la matriz de correlación, utilizando las variables numéricas y las dicotómicas, y se comentan las correlaciones más apreciables.
+
+```{r correlaciones}
+cor.df <- cor(df[c(2,4,13)],use="complete.obs")
+corrplot(cor.df, method = 'number')
+```
+
+   - Existe una correlación evidente ente Tomatometer y Audience.score, ya que ambas variables puntúan la valoración de las películas. Sin embargo, esta correlación es de 0,62, y aunque la correlación es clara, no es tan fuerte como se podría esperar.
+   
+   - Las películas tienen una ligera tendencia a estar mejor puntuadas cuando su duración es mayor, ya que la correlación de Audience.Score y Runtime es positiva, 0.19.
+  
+A continuación se representa la relación entre las "etiquetas" Audience.Score, Tomatometer y Fresh con las demás variables.
+
+```{r representación de correlaciones 0}
+p41 <- ggplot(aes(y = Tomatometer, x = Audience.score), data = df) + geom_point() + ggtitle("Audience Score and Tomatometer")
+p42 <- ggplot(data = df,aes(x=Genre1,fill=Fresh))+geom_bar() + coord_flip() + ggtitle("Fresh by genre")
+grid.arrange(p41, p42, ncol=2, nrow=1)
+```
+  
+   - De igual manera que en la matriz de relaciones, Tomatometer y Audience score presentan una relación directa, generalmente cuando crece Audience Score lo hace también Tomatometer.
+   
+   - En cuanto a los *géneros*, destaca los documentales y las biografías, que tienen un porcentaje de *fresh* alto, mientras que comedia o acción tienden a tener críticas negativas. El género con mayor número de películas es drama.
+   
+```{r representación de correlaciones 1}
+p43 <- ggplot(df, aes(x=Runtime, y=Audience.score)) + geom_point() + ggtitle("Audience score by runtime")
+p44 <- ggplot(df, aes(x=Runtime, y=Tomatometer)) + geom_point() + ggtitle("Tomatometer score by runtime")
+grid.arrange(p43, p44, ncol=1, nrow=2)
+```
+
+   - En cuanto al Runtime, se aprecia una ligera tendencia a que las películas con mayor duración tengan una mayor puntuación, tal y como se indicaba en la amtriz de correlaciones.
+
+```{r representación de correlaciones 2}
+p45 <- ggplot(data = df,aes(x=Rating,fill=Fresh))+geom_bar() + ggtitle("Fresh by rating")
+p46 <- ggplot(data = df,aes(x=Parental.Control,fill=Fresh))+geom_bar() + ggtitle("Fresh by Parental Control")
+p47 <- ggplot(aes(y = Audience.score, x = (Parental.Control)), data = df) + geom_boxplot() + ggtitle("Audience Score by Parental control")
+p48 <- ggplot(aes(y = Tomatometer, x = (Parental.Control)), data = df) + geom_boxplot() + ggtitle("Tomatometer score by Parental control")
+grid.arrange(p45, p46, p47, p48, ncol=2, nrow=2)
+```
+
+  - En cuanto a las restricciones de edad de la películas, el gráfico de arriba a la derecha mustra claramente que el porcentaje de películas con crítica positiva es mucho mayor en la películas con restricciones que en las que son para todos los públicos.
+  
+  - Llama la atención que esta diferencia es mucho más alta en el caso de las puntuaciones de críticos (Tomatometer) que en el público general.
+
+```{r representación de correlaciones 3}
+p49 <- ggplot(data = df,aes(x=Seasons,fill=Fresh))+geom_bar() + ggtitle("Fresh by release season")
+p410 <- ggplot(aes(y = Audience.score, x = Seasons), data = df) + geom_boxplot() + ggtitle("Audience score by release season")
+p411 <- ggplot(aes(y = Tomatometer, x = Seasons), data = df) + geom_boxplot() + ggtitle("Tomatometer by release season")
+grid.arrange(p410, p411, p49, ncol=2, nrow=2)
+```
+
+   - En cuanto a la estación en que se estrenan las películas, no se aprecia ninguna tendencia significativa, más allá de que en invierno se estrenan menos películas que el resto del año.
+
+```{r representación de correlaciones 4}
+p412 <- ggplot(data = subset(df,Release.Year>2005),aes(x=Release.Year,fill=Fresh))+geom_bar() + ggtitle("Fresh by release year") + coord_flip()
+p411a <- ggplot(data = subset(df,Release.Year>2005),aes(x=Release.Year,fill=Fresh))+geom_bar(position="fill") + ggtitle("Fresh percentaje by release year") + coord_flip() +ylab("Frecuencia")
+p413 <- ggplot(aes(y = Audience.score, x = Release.Year), data = subset(df,Release.Year>2005)) + geom_boxplot() + ggtitle("Audience score by year") + coord_flip()
+p414 <- ggplot(aes(y = Tomatometer, x = Release.Year), data = subset(df,Release.Year>2005)) + geom_boxplot() + ggtitle("Tomatometer score by year") + coord_flip()
+grid.arrange(p412, p411a, p413, p414, ncol=2, nrow=2)
+```
+
+   - En cuanto al año de esteno de la películas, se puede apreciar que la opinión de la crítica ha ido mejorando paulatinamente con el paso de los años, y cada año el porcentaje de películas con críticas positivas parece mejorar ligeramente.
+   
+   - Por otra parte, en 2006 se alcanzó un pico de estenos, y desde ese año cada año se estrenan menos películas.
+
+```{r representación de correlaciones 5}
+p415 <- ggplot(data = df,aes(x=Release.isWide,fill=Fresh))+geom_bar() + ggtitle("Fresh by type of release")
+p415a <- ggplot(data = df,aes(x=Release.isWide,fill=Fresh))+geom_bar(position="fill") + ggtitle("Fresh percentaje by type of release") +ylab("Frecuencia")
+p416 <- ggplot(aes(y = Audience.score, x = (Release.isWide)), data = df) + geom_boxplot() + ggtitle("Audience score by type of release")
+p417 <- ggplot(aes(y = Tomatometer, x =  (Release.isWide)), data = df) + geom_boxplot() + ggtitle("Tomatometer score by type of release")
+grid.arrange(p415, p415a, p416, p417, ncol=2, nrow=2)
+```
+
+   - Curiosamente, las películas con un estreno "limited" tienen un mayor porcentaje de críticas positivas por parte de los críticos que las "wide", mientras que en el caso de la audiencia no es así.
+
+```{r representación de correlaciones 6}
+p418 <- ggplot(data = df,aes(x=DirectorIsWriter,fill=Fresh))+geom_bar() + ggtitle("Fresh by DirectorIsWriter")
+p418a <- ggplot(data = df,aes(x=DirectorIsWriter,fill=Fresh))+geom_bar(position="fill") + ggtitle("Fresh percentaje by DirectorIsWriter") +ylab("Frecuencia") 
+p419 <- ggplot(aes(y = Audience.score, x = as.factor(DirectorIsWriter)), data = df) + geom_boxplot() + ggtitle("Audience score by DirectorIsWriter")
+p420 <- ggplot(aes(y = Tomatometer, x =  as.factor(DirectorIsWriter)), data = df) + geom_boxplot() + ggtitle("Tomatometer score by DirectorIsWriter")
+grid.arrange(p418, p418a, p420, p419, ncol=2, nrow=2)
+```
+
+   - En cuanto las películas que han sido dirigidas por el propio escritor, al igual que sucede con el tipo de esteno, se aprecia una diferencia clara en el caso de las puntuaciones de los críticos (Tomatometer y Fresh) en favor de las películas que han sido dirigidas por su escritor, mientras que en el caso del público general no se aprecia esta tendencia.
