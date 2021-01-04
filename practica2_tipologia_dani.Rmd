@@ -423,7 +423,7 @@ Se realizarán dos contrastes de hipótesis para tratar de responder dos pregunt
    - ¿Las películas dirigidas por el propio escritor son mejores (tienen mayor tomatometer) que las que tienen un director distinto? 
 Se utilizarán las variables `Tomatometer` y `DirectorisWriter`.
    
-   - ¿Las películas del género drama tienen una mejor puntuación por parte la audiencia que las pelñiculas de terror?
+   - ¿Las películas del género drama tienen una mejor puntuación por parte la audiencia que las películas de terror?
 Se utilizarán las variables `Audience.score` y `Genre1`.
 
 
@@ -870,9 +870,9 @@ valores_ajustados <- fitted(model.lin)
 
 Para finalizar el estudio sobre este dataset, se realizarán dos contraste de hipótesis:
 
-#### Contraste 1: Las películas dirigidas por el propio escritor son mejores (tienen mayor Tomatometer) que las que tienen un director distinto
+#### Contraste 1: Las películas cuyo director es también el escritor son mejores (tienen mayor Tomatometer) que las que no cumplen esta condición
 
-Lo primero será separar las dos muestras, por un lado las películas cuyo director es también el escrito y las que no y las graficamos para observar su distribución:
+Lo primero será separar las dos muestras, por un lado las películas cuyo director es también el escritor y las que no y las graficamos para observar su distribución:
 ```{r Separación de muestras}
 # Separamos las muestras y nos quedamos solo con la variable Tomatometer
 director.and.writer <- df[df$DirectorIsWriter == "Yes",]
@@ -928,9 +928,6 @@ Se realizarán las siguientes consideraciones:
 -Cada muestra, pertenece a una población distinta e independiente.
 
 -Se desconoce la varianza de las poblaciones, pero se suponen iguales.
-
-
-A partir de lo anterior, se aplicará el análisis de contraste sobre la diferencia de medias cuando la **distribución de las varibales es normal y la varianza de ambas es desconocida pero igual**.
 
 Así, se plantearan las siguientes Hipótesis Nula: **La media de la puntuación `Tomatometer` de las películas cuyo director es también el escritor, es IGUAL al de las películas donde esto no sucede**
 
@@ -1006,9 +1003,9 @@ qqline(residuos)
   
   - Las películas dirigidas por el propio escritor tiendena tener una mejor crítica que las que tienen directores y escritores diferentes.
   
-  - Las variables Genre2 y Genre3 se han descartado por tener demasiados valores perdidos. Director y Production no se utilizarán por tener una cantidad de categorías demasiado grande. Rating y Release.Date no se usarán porque en su lugar se usarán Parental.Control y Release.Year. Seasons no se utilizará por no tener ningñun efecto apreciable en las puntuaciones de las películas.
+  - Las variables Genre2 y Genre3 se han descartado por tener demasiados valores perdidos. Director y Production no se utilizaron por tener una cantidad de categorías demasiado grande. Rating y Release.Date no se usaron porque en su lugar se usaron Parental.Control y Release.Year. Release.Season no se utilizó por no tener ningun efecto apreciable en las puntuaciones de las películas.
   
-  - Además de las etiquetas Tomatometer, Audience.score y Fresh, las variables que se usarán en los modelos de clasificación o regresión son: **`Parental.Control`, `DirectorIsWriter`, `Runtime`, `Genre1`, `Release.Year` y `Release.isWide`**.
+  - Además de las etiquetas Tomatometer, Audience.score y Fresh, las variables que se usaron en los modelos de clasificación o regresión son: **`Parental.Control`, `DirectorIsWriter`, `Runtime`, `Genre1`, `Release.Year` y `Release.isWide`**.
 
 
 ### Clasificación con regresión logística
@@ -1026,3 +1023,16 @@ qqline(residuos)
   - El coeficiente de determinación ajustado obtenido con el modelo es de 0.227, lo cual se podría calificar como un ajuste bastante pobre.
 
   - El modelo permite obtener una ligera aproximación de la puntuación de una película, pero no es sufieciente para concluir en que haya bondad en el ajuste, por lo que los resultados no permiten resolver la cuestión de cuál será la puntuación de una película a partir de su duración, género, año y tipo de estreno, presencia o de restricciones de edad y coincidencia del director con el escritor.
+  
+
+#### Contraste de Hipótesis.
+
+  - **Contraste 1:**
+      - Se comprobó que las dos muestras obtenidas no presentaban una distribución normal. Aún así se pudo realizar el contraste de hipótesis debido al tamaño de las muestras y al hecho de que comparamos sus medias.
+      - Se rechazó la hipótesis nula de que la media muestral de la puntuación `Tomatometer` de las películas cuyo director es también el escrito era igual a la media muestral de las películas que no cumplian con ese requisito.
+      - Se comprobó, a través de este contraste, que si existe una tendencia positiva a estar mejor valorada una película cuando su director es tambien el escritor.
+      
+  - **Contraste 2:**
+      - De nuevo se comprobó que las dos muestras obtenidas no presentaban una distribución normal. Aún así se pudo realizar el contraste de hipótesis debido al tamaño de las muestras y al hecho de que comparamos sus medias.
+      - Se rechazó la hipótesis nula de que la media muestral de la puntuación `Audience.score` de las películas cuya categoría es drama era igual a la media muestral de las películas de categoría horror.
+      - Se aceptó la hipótesis nula de estas medias muestrales no eran iguales y que de hecho, las películas de drama estan mejor puntuadas por el público que las peliculas de horror.
