@@ -13,7 +13,7 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
+*******************************************************************************
 ```{r librerias a usar, message=FALSE, warning=FALSE}
 library(knitr)
 library(stringr)
@@ -26,7 +26,7 @@ library(caret)
 library(psych)
 library(nortest)
 ```
-
+\vspace{5mm}
 # 1 Descripción del dataset
 
 Para el desarrollo de esta práctica, se ha seleleccionado el dataset **Listado de películas** extraído en la primera práctica de la asignatura, desde la pagina web Rotten Tomatoes (*https://www.rottentomatoes.com*). Este dataset ha sido publicado en Zenodo con el DOI: 10.5281/zenodo.4265051 y puede ser visualizado en el siguiente link: *https://zenodo.org/record/4265051#.X6mORGgReUk*.
@@ -144,7 +144,6 @@ df.fresh[df.fresh >= 60] <- "Yes"
 df.fresh[df.fresh != "Yes"] <- "No"
 
 df$Fresh <- df.fresh
-df
 ``` 
 
 #### 3.3 Limpieza variable Audience.score.
@@ -196,7 +195,6 @@ p.control <- str_replace_all(p.control,"NC-17|PG-13|PG|R|TV14|TVG|TVMA|TVPG",
 p.control <- p.control
 
 df["Parental.Control"] <- p.control
-df
 ```
 
 
@@ -396,10 +394,6 @@ df <- df[c("Title","Tomatometer","Fresh","Audience.score","Rating",
            "Parental.Control","Genre1","Genre2","Genre3","Director","Production",
            "DirectorIsWriter","Runtime","Release.Date", "Release.Year",
            "Release.Season", "Release.isWide")]
-
-# Visualización del dataframe
-df
-
 ```
 
 
@@ -413,13 +407,14 @@ En primer lugar, se realizará un análisis de la correlación entre las variabl
 
 Además se presentarán gráficos con el fin de averiguar las relaciones de las variables con las puntuaciones de las películas y estimar su influencia.
 
-### Regresión
-
-Se realizará un análisis de regresión para predecir la `Audicence.score` de una película. Para ello se escogerán, a partir del análisis de correlación de las variables, cuáles son las variables de entrada que se utilizarán entre `Parental.Control`, `Genre1`, `Director`, `Runtime`, `Production`, `Release.isWide`, `Release.Year`, `Release.Season` y `DirectorIsWriter`.
 
 ### Clasificación
 
 Se creará un modelo de clasificación para clasificar las películas según si son *fresh* o *rotten*, es decir, si tienen una crítica mayormente positiva o no (variable `Fresh`). Al igual que en el modelo de regresión, se seleccionarán las variables de entrada entre `Parental.Control`, `Genre1`, `Director`, `Runtime`, `Production`, `Release.isWide`, `Release.Year`, `Release.Season` y `DirectorIsWriter`.
+
+### Regresión
+
+Se realizará un análisis de regresión para predecir la `Tomatometer` de una película. Para ello se escogerán, a partir del análisis de correlación de las variables, cuáles son las variables de entrada que se utilizarán entre `Runtime`, `Parental.Control`, `Release.Year`, `Genre1`, `Release.isWide` y `DirectorIsWriter`.
 
 ### Contraste de hipótesis
 
