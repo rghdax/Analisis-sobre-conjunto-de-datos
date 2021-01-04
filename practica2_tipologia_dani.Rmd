@@ -408,13 +408,13 @@ En primer lugar, se realizará un análisis de la correlación entre las variabl
 Además se presentarán gráficos con el fin de averiguar las relaciones de las variables con las puntuaciones de las películas y estimar su influencia.
 
 
-### Clasificación
+### Clasificación con regresión logística
 
-Se creará un modelo de clasificación para clasificar las películas según si son *fresh* o *rotten*, es decir, si tienen una crítica mayormente positiva o no (variable `Fresh`). Al igual que en el modelo de regresión, se seleccionarán las variables de entrada entre `Parental.Control`, `Genre1`, `Director`, `Runtime`, `Production`, `Release.isWide`, `Release.Year`, `Release.Season` y `DirectorIsWriter`.
+Se creará un modelo de regresión logística para clasificar las películas según si son *fresh* o *rotten*, es decir, si tienen una crítica mayormente positiva o no (variable `Fresh`). Al igual que en el modelo de regresión, se seleccionarán las variables de entrada entre `Parental.Control`, `Genre1`, `Director`, `Runtime`, `Production`, `Release.isWide`, `Release.Year`, `Release.Season` y `DirectorIsWriter`.
 
-### Regresión
+### Regresión lineal
 
-Se realizará un análisis de regresión para predecir la `Tomatometer` de una película. Para ello se escogerán, a partir del análisis de correlación de las variables, cuáles son las variables de entrada que se utilizarán entre `Runtime`, `Parental.Control`, `Release.Year`, `Genre1`, `Release.isWide` y `DirectorIsWriter`.
+Se realizará un análisis de regresión lineal múltiple para predecir la `Audience.score` de una película. Para ello se escogerán, a partir del análisis de correlación de las variables, cuáles son las variables de entrada que se utilizarán entre `Runtime`, `Parental.Control`, `Release.Year`, `Genre1`, `Release.isWide` y `DirectorIsWriter`.
 
 ### Contraste de hipótesis
 
@@ -423,7 +423,9 @@ Se realizarán dos contrastes de hipótesis para tratar de responder dos pregunt
    - ¿Las películas dirigidas por el propio escritor son mejores (tienen mayor tomatometer) que las que tienen un director distinto? 
 Se utilizarán las variables `Tomatometer` y `DirectorisWriter`.
    
-   
+   - ¿Las películas del género drama tienen una mejor puntuación por parte la audiencia que las pelñiculas de terror?
+Se utilizarán las variables `Audience.score` y `Genre1`.
+
 
 # 4.2 Comprobación de la normalidad y homogeneidad de la varianza.
 
@@ -697,7 +699,7 @@ grid.arrange(p43, p44, ncol=1, nrow=2)
    - En cuanto al `Runtime`, se aprecia una ligera tendencia a que las películas con mayor duración tengan una mayor puntuación, tal y como se indicaba en la matriz de correlaciones.
 
 ```{r representación de correlaciones 2, warning=FALSE}
-p45 <- ggplot(data = df,aes(x=Rating,fill=Fresh))+geom_bar() + 
+p45 <- ggplot(data = df,aes(x=Rating,fill=Fresh))+geom_bar() + coord_flip() +
        ggtitle("Fresh by rating")
 
 p46 <- ggplot(data = df,aes(x=Parental.Control,fill=Fresh))+geom_bar() + 
@@ -717,14 +719,14 @@ grid.arrange(p45, p46, p47, p48, ncol=2, nrow=2)
   - Llama la atención que esta diferencia es mucho más alta en el caso de las puntuaciones de críticos (`Tomatometer`) que en el público general.
 
 ```{r representación de correlaciones 3}
-p49 <- ggplot(data = df,aes(x=Release.Season,fill=Fresh))+geom_bar() + 
-       ggtitle("Fresh by release Release.Season")
+p49 <- ggplot(data = df,aes(x=Release.Season,fill=Fresh))+geom_bar() + coord_flip() +
+       ggtitle("Fresh by release season")
 
 p410 <- ggplot(aes(y = Audience.score, x = Release.Season), data = df) + 
-        geom_boxplot() + ggtitle("Audience score by release Release.Season")
+        geom_boxplot() + ggtitle("Audience score by release season")
 
 p411 <- ggplot(aes(y = Tomatometer, x = Release.Season), data = df) + geom_boxplot() + 
-        ggtitle("Tomatometer by release Release.Season")
+        ggtitle("Tomatometer by release season")
 
 grid.arrange(p410, p411, p49, ncol=2, nrow=2)
 ```
@@ -799,7 +801,6 @@ grid.arrange(p418, p418a, p420, p419, ncol=2, nrow=2)
    - En cuanto las películas que han sido dirigidas por el propio escritor, al igual que sucede con el tipo de esteno, se aprecia una diferencia clara en el caso de las puntuaciones de los críticos (`Tomatometer` y `Fresh`) en favor de las películas que han sido dirigidas por su escritor, mientras que en el caso del público general no se aprecia esta tendencia.
 
 
-
 ### Clasificación con regresión logística
 
 A continuación, se crea un modelo de regresión logística, con regresores tanto cuantitativos como cualitativos, para tratar de predecir el valor de la etiqueta dicotómica Fresh de las distintas películas, es decir, clasificacrlas en "fresh" o "rotten".
@@ -810,7 +811,7 @@ En primer lugar, se preparan los datos para la creación del modelo, seleccionan
    
 ```{r regresion logistica}
 # Preparación de datos
-df2 <- df[c("Tomatometer","Fresh", "Parental.Control","DirectorIsWriter",
+df2 <- df[c("Audience.score","Fresh", "Parental.Control","DirectorIsWriter",
             "Runtime", "Release.Year","Release.isWide","Genre1")]
 
 df2 <-  df2[complete.cases(df2), ]
@@ -821,7 +822,7 @@ Fresh.log[df2$Fresh=="No"] <- 0
 Fresh.log <- as.integer(Fresh.log)
 ```
 
-Se crea el modelo de regresión logística, donde la variable dependiente es `Fresh` y las independientes `Parental.Control`, `DirectorIsWriter`, `Runtime`, `Release.Year` y `Release.isWide`, obteniendo un AIC de 8250,1.
+Se crea el modelo de regresión logística, donde la variable dependiente es `Fresh` y las independientes `Parental.Control`, `DirectorIsWriter`, `Runtime`, `Gendre1`, `Release.Year` y `Release.isWide`. 
 
 ```{r modelo regresion logistica, warning=FALSE}
 attach(df2)
@@ -844,40 +845,25 @@ model.pred <- data.frame(values=predict(model.log,as.factor(Fresh),
 model.pred$predicted <- factor(ifelse(model.pred$values>0.5, "Yes", "No"))
 
 conf_matrix <- confusionMatrix(model.pred$predicted,(as.factor(Fresh)))
-
-conf_matrix$table
 ```
 
-El modelo clasifica correctamente 4066 de los 6431 registros del conjunto de datos, obteniendo 1157 falsos negativos y 1208 falsos positivos.
-
-```{r precision modelo regresion logistica}
-conf_matrix$overall
-```
-
-La precisión del modelo es del 63,23%, lo cual se podría catalogar como aceptable. El porcentaje es claramente superior al 50%, pero no lo suficiente como para que sea posible clasificar con garantías si una película tendrá una crítica favorable o no a partir de su duración, género, año y tipo de estreno, presencia o de restricciones de edad y coincidencia del director con el escritor.
 
 ### Regresión lineal múltiple
 
-A continuación, se crea un modelo de regresión lineal múltiple, con regresores tanto cuantitativos como cualitativos, para tratar de predecir el valor de la etiqueta `Tomatometer` de las distintas películas.
+A continuación, se crea un modelo de regresión lineal múltiple, con regresores tanto cuantitativos como cualitativos, para tratar de predecir el valor de la etiqueta `Audience.score` de las distintas películas.
 
 ```{r regresion lineal}
-model.lin=lm(Tomatometer~Runtime + factor(Parental.Control) + 
+model.lin=lm(Audience.score~Runtime + factor(Parental.Control) + 
             factor(Release.Year) + factor(Genre1) + 
             factor(DirectorIsWriter) + factor(Release.isWide),data=df2)
-summary(model.lin)
+(model.lin)
 ```
 
-El coeficiente de determinación ajustado obtenido con el modelo es de 0.136, lo cual se podría calificar como un ajuste bastante pobre.
-
-Por último, los siguientes gráficos muestran; en primer lugar, la distribución de errores y, en segundo lugar, su similitud con una distribución normal.
+A continuación se obtienen los residuos del modelo, que serán utilizados para representar la distribución de errores y su similitud con una distribución normal.
 
 ```{r resultados regresion lineal}
-
 residuos <- rstandard(model.lin)
 valores_ajustados <- fitted(model.lin)
-plot(valores_ajustados, residuos, main="Residuos vs valores ajustados")
-qqnorm(residuos, main="QQplot normalidad residuos")
-qqline(residuos)
 ```
 
 ### Contraste de Hipótesis.
@@ -960,3 +946,83 @@ t.test(director.and.writer$Tomatometer,just.director$Tomatometer,
 
 ```
 Como se observa, el p-valor obtenido es menor a 0.05, por lo que se rechaza la hipótesis nula de que las medias de la puntuación `Tomatometer` son iguales, por lo que se acepta la hipótesis alternativa de que **La media de las puntuaciones `Tomatometer`de las películas cuyo director es también el escritor es mayor que la media de las películas que no cumplen esta condición**
+
+# 5 Representación de los resultados a partir de tablas y gráficas.
+
+### Correlación
+
+*En el análisis de correlaciones, todos los gráficos y tablas se han presentado en el apartado 4.3, ya que su aplicación consiste básicamente en mostrar y interpretar los gráficos, y estas interpretaciones eran necesarias para elegir las variables en las siguientes pruebas.*
+
+### Clasificación con regresión logística
+
+La siguiente tabla muestra la matriz de confusión del modelo de regresión logística, que representa los falsos positivos, los falsos negativos, lo verdaderos negativos y los verdaderos positivos al aplicar el modelo sobre el total del conjunto.
+
+```{r matriz de confusion regresion logistica}
+#Matriz de confusión
+conf_matrix$table
+```
+
+Finalemente se muestra la precisión del modelo, obtenida a partir de la matriz de confusión anterior, mediante la fórmula *(tp+tn)/(tp+tn+fp+fn)*, o lo que es lo mismo, número de aciertos sobre el total de datos.
+
+```{r precision modelo regresion logistica}
+#Precisión del modelo
+conf_matrix$overall
+```
+
+### Regresión lineal múltiple
+
+El siguiente fragmento muestra un resumen del modelo
+
+```{r modelo de regresion lineal}
+summary(model.lin)
+```
+
+Los siguientes gráficos muestran; en primer lugar, la distribución de errores y, en segundo lugar, su similitud con una distribución normal.
+
+```{r graficos regresion lineal}
+plot(valores_ajustados, residuos, main="Residuos vs valores ajustados")
+qqnorm(residuos, main="QQplot normalidad residuos")
+qqline(residuos)
+```
+
+
+# 6 Resolución del problema
+
+### Correlación
+
+*Las conclusiones a cada gráfico se han comentado en el apartado 4.3. En este apartado, se muetra un resumen de esas conclusiones.*
+
+  - A mayor tiempo de duración, las películas tienden a tener una valoración ligeramente mejor por parte de la audiencia.
+  
+  - Los documentales y biografías suelen ser recibidas positivamente por la crítica, mientras que en los géneros de comedia y acción sucede lo contrario.
+
+  - Las películas con restricciones de edad tienden a tener una mejor valoración que las que son para todos los públicos.
+  
+  - La estación en que se ha lanzado una película no influye en su puntuación.
+  
+  - La opinión de la crítica mejora paulatinamente con el paso de los años.
+  
+  - Las películas que se estrenan en todos los cines suelen tener una peor crítica que las limitadas.
+  
+  - Las películas dirigidas por el propio escritor tiendena tener una mejor crítica que las que tienen directores y escritores diferentes.
+  
+  - Las variables Genre2 y Genre3 se han descartado por tener demasiados valores perdidos. Director y Production no se utilizarán por tener una cantidad de categorías demasiado grande. Rating y Release.Date no se usarán porque en su lugar se usarán Parental.Control y Release.Year. Seasons no se utilizará por no tener ningñun efecto apreciable en las puntuaciones de las películas.
+  
+  - Además de las etiquetas Tomatometer, Audience.score y Fresh, las variables que se usarán en los modelos de clasificación o regresión son: **`Parental.Control`, `DirectorIsWriter`, `Runtime`, `Genre1`, `Release.Year` y `Release.isWide`**.
+
+
+### Clasificación con regresión logística
+
+  - Se obtiene un AIC de 8250,1.
+
+  - El modelo clasifica correctamente 4066 de los 6431 registros del conjunto de datos, obteniendo 1157 falsos negativos y 1208 falsos positivos.
+
+  - La precisión del modelo es del 63,23%, lo cual se podría catalogar como aceptable. 
+  
+  - El porcentaje es claramente superior al 50%, pero no lo suficiente como para que sea posible clasificar con garantías si una película tendrá una crítica favorable o no a partir de su duración, género, año y tipo de estreno, presencia o de restricciones de edad y coincidencia del director con el escritor. Por tanto, el modelo no permite responder el problema con grandes resultados, pero sí clasificar correctamente el 63,2% de películas.
+
+### Regresión lineal múltiple
+
+  - El coeficiente de determinación ajustado obtenido con el modelo es de 0.227, lo cual se podría calificar como un ajuste bastante pobre.
+
+  - El modelo permite obtener una ligera aproximación de la puntuación de una película, pero no es sufieciente para concluir en que haya bondad en el ajuste, por lo que los resultados no permiten resolver la cuestión de cuál será la puntuación de una película a partir de su duración, género, año y tipo de estreno, presencia o de restricciones de edad y coincidencia del director con el escritor.
