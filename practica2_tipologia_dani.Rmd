@@ -17,6 +17,7 @@ library(ggplot2)
 library(ggpubr)
 library(corrplot)
 require(gridExtra)
+library(caret)
 ```
 
 ## R Markdown
@@ -479,3 +480,35 @@ grid.arrange(p418, p418a, p420, p419, ncol=2, nrow=2)
 ```
 
    - En cuanto las películas que han sido dirigidas por el propio escritor, al igual que sucede con el tipo de esteno, se aprecia una diferencia clara en el caso de las puntuaciones de los críticos (Tomatometer y Fresh) en favor de las películas que han sido dirigidas por su escritor, mientras que en el caso del público general no se aprecia esta tendencia.
+   
+## Regresión logística
+```{r regresion logistica}
+df2 <- df[df$Release.Year>2004 & !is.na(df$Runtime),]
+df2 <-  df2[complete.cases(df2), ]
+Fresh.log <- df2$Fresh
+Fresh.log[df2$Fresh=="Yes"] <- 1
+Fresh.log[df2$Fresh=="No"] <- 0
+Fresh.log <- as.integer(Fresh.log)
+attach(df2)
+model.log=glm(formula=Fresh.log~Runtime+factor(Parental.Control)+factor(Release.Year)+factor(DirectorIsWriter)+factor(Release.isWide),family=binomial(link=logit))
+summary(model.log)
+model.pred <- data.frame(values=predict(model.log,as.factor(Fresh),type = "response"))
+model.pred$predicted <- factor(ifelse(model.pred$values>0.5, "Yes", "No"))
+conf_matrix <- confusionMatrix(model.pred$predicted,(as.factor(Fresh)))
+conf_matrix$table
+conf_matrix$overall
+```
+
+## Regresión lineal múltiple
+```{r regresion lineal}
+model.lin=lm(Tomatometer~Runtime+factor(Parental.Control)+factor(Release.Year)+factor(DirectorIsWriter)+factor(Release.isWide),data=df2)
+
+model.lin
+summary(model.lin)
+residuos <- rstandard(model.lin)
+valores_ajustados <- fitted(model.lin)
+plot(valores_ajustados, residuos)
+qqnorm(residuos, main=bquote(~ residuos == .(length(residuos))))
+qqline(residuos)
+
+```
