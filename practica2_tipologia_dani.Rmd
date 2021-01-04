@@ -982,6 +982,9 @@ qqnorm(residuos, main="QQplot normalidad residuos")
 qqline(residuos)
 ```
 
+### Contraste de Hipótesis
+*En el apartado 4.3, en la sección correspondiente al desarrollo de los dos contrastes de hipótesis, se encuentran todos los gráficos y tablas correspondientes a los mismos, ya que dicho estudio se apoya necesariamente en estos.*
+
 
 # 6 Resolución del problema
 
