@@ -481,34 +481,70 @@ grid.arrange(p418, p418a, p420, p419, ncol=2, nrow=2)
 
    - En cuanto las películas que han sido dirigidas por el propio escritor, al igual que sucede con el tipo de esteno, se aprecia una diferencia clara en el caso de las puntuaciones de los críticos (Tomatometer y Fresh) en favor de las películas que han sido dirigidas por su escritor, mientras que en el caso del público general no se aprecia esta tendencia.
    
-## Regresión logística
+## Clasificación con regresión logística
+
+A continuación, se crea un modelo de regresión logística, con regresores tanto cuantitativos como cualitativos, para tratar de predecir el valor de la etiqueta dicotómica Fresh de las distintas películas, es decir, clasificacrlas en "fresh" o "rotten".
+
+A partir del análisis de correlaciones, se usarán las variables que tienen una correlación apreciable con la etiqueta Fresh: Parental.Control, DirectorIsWriter, Runtime, Genre1, Release.Yeary Release.isWide.
+
+En primer lugar, se preparan los datos para la creación del modelo, seleccionando las variables especificadas y eliminando los elementos nulos. Se eliminan los años anteriores al 2006, ya que tienen una cantidad de registros muy escasa. Además, se genera una **distribución de Bernoulli con la etiqueta Fresh**.
+   
 ```{r regresion logistica}
-df2 <- df[df$Release.Year>2004 & !is.na(df$Runtime),]
+# Preparación de datos
+df2 <- df[c("Tomatometer","Fresh", "Parental.Control","DirectorIsWriter","Runtime", "Release.Year","Release.isWide","Genre1")]
 df2 <-  df2[complete.cases(df2), ]
+df2 <- df2[df2$Release.Year>2005,]
 Fresh.log <- df2$Fresh
 Fresh.log[df2$Fresh=="Yes"] <- 1
 Fresh.log[df2$Fresh=="No"] <- 0
 Fresh.log <- as.integer(Fresh.log)
+```
+
+Se crea el modelo de regresión logística, donde la variable dependiente es Fresh y las independientes Parental.Control, DirectorIsWriter, Runtime, Release.Yeary Release.isWide, obteniendo un AIC de 8250,1.
+
+```{r modelo regresion logistica}
 attach(df2)
-model.log=glm(formula=Fresh.log~Runtime+factor(Parental.Control)+factor(Release.Year)+factor(DirectorIsWriter)+factor(Release.isWide),family=binomial(link=logit))
+#Creación del modelo
+model.log=glm(formula=Fresh.log~Runtime+factor(Parental.Control)+factor(Release.Year)+factor(DirectorIsWriter)+factor(Release.isWide)+
+                 factor(Genre1),family=binomial(link=logit))
 summary(model.log)
+```
+
+Finalmente, se predicen las etiquetas del conjunto de datos y se obtiene la matriz de confusión y la precisión del modelo.
+
+```{r resultados modelo regresion logistica}
+#Predicción de valores
 model.pred <- data.frame(values=predict(model.log,as.factor(Fresh),type = "response"))
 model.pred$predicted <- factor(ifelse(model.pred$values>0.5, "Yes", "No"))
 conf_matrix <- confusionMatrix(model.pred$predicted,(as.factor(Fresh)))
 conf_matrix$table
+```
+
+El modelo clasifica correctamente 4066 de los 6431 registros del conjunto de datos, obteniendo 1157 falsos negativos y 1208 falsos positivos.
+
+```{r precision modelo regresion logistica}
 conf_matrix$overall
 ```
 
-## Regresión lineal múltiple
-```{r regresion lineal}
-model.lin=lm(Tomatometer~Runtime+factor(Parental.Control)+factor(Release.Year)+factor(DirectorIsWriter)+factor(Release.isWide),data=df2)
+La precisión del modelo es del 63,23%, lo cual se podría catalogar como aceptable. El porcentaje es claramente superior al 50%, pero no lo suficiente como para que sea posible clasificar con garantías si una película tendrá una crítica favorable o no a partir de su duración, género, año y tipo de estreno, presencia o de restricciones de edad y coincidencia del director con el escritor.
 
-model.lin
+## Regresión lineal múltiple
+
+A continuación, se crea un modelo de regresión lineal múltiple, con regresores tanto cuantitativos como cualitativos, para tratar de predecir el valor de la etiqueta Tomatometer de las distintas películas.
+
+```{r regresion lineal}
+model.lin=lm(Tomatometer~Runtime+factor(Parental.Control)+factor(Release.Year)+factor(Genre1)+factor(DirectorIsWriter)+factor(Release.isWide),data=df2)
 summary(model.lin)
+```
+
+El coeficiente de determinación ajustado obtenido con el modelo es de 0.136, lo cual se podría calificar como un ajuste bastante pobre.
+
+Por último, los siguientes gráficos muestran; en primer lugar, la distribución de errores y, en segundo lugar, su similitud con una distribución normal.
+
+```{r resultados regresion lineal}
 residuos <- rstandard(model.lin)
 valores_ajustados <- fitted(model.lin)
-plot(valores_ajustados, residuos)
-qqnorm(residuos, main=bquote(~ residuos == .(length(residuos))))
+plot(valores_ajustados, residuos, main="Residuos vs valores ajustados")
+qqnorm(residuos, main="QQplot normalidad residuos")
 qqline(residuos)
-
 ```
