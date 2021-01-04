@@ -325,17 +325,17 @@ df$Release.YearDay <- as.integer(strftime(df$Release.Date, format = "%j"))
 df$Release.Year <- strftime(df$Release.Date, format = "%Y")
 ```
 
-```{r Creación de variable Seasons}
+```{r Creación de variable Release.Season}
 #Estación
 spring <-  as.integer(strftime("2020-03-21", format = "%j"))
 summer <-  as.integer(strftime("2020-06-22", format = "%j"))
 autumn <-  as.integer(strftime("2020-09-23", format = "%j"))
 winter <-  as.integer(strftime("2020-12-22", format = "%j"))
-df$Seasons[!is.na(df$Release.Year)] <- "winter"
-df$Seasons[df$Release.YearDay>spring] <- "spring" 
-df$Seasons[df$Release.YearDay>summer] <- "summer" 
-df$Seasons[df$Release.YearDay>autumn] <- "autumn" 
-df$Seasons[df$Release.YearDay>winter] <- "winter"
+df$Release.Season[!is.na(df$Release.Year)] <- "winter"
+df$Release.Season[df$Release.YearDay>spring] <- "spring" 
+df$Release.Season[df$Release.YearDay>summer] <- "summer" 
+df$Release.Season[df$Release.YearDay>autumn] <- "autumn" 
+df$Release.Season[df$Release.YearDay>winter] <- "winter"
 ```
 
 Finalmente, se eliminaron las columnas YearDay, Release.Date.Streamings y Release.Date.Theaters.
@@ -347,13 +347,13 @@ df$Release.Date.Theaters <- NULL
 ```
 
 
-A continuación, se presentará una gráfica representativa de las variables: `Genre1`, `Runtime`, `Release.IsWide` y `Seasons`:
+A continuación, se presentará una gráfica representativa de las variables: `Genre1`, `Runtime`, `Release.IsWide` y `Release.Season`:
 
 ```{r grafica de variables Genre1, warning=FALSE}
 
 plot6 <- ggplot(df, aes(Genre1)) + geom_bar() + coord_flip()
 plot7 <- ggplot(df, aes(Runtime)) + geom_boxplot() 
-plot8 <- ggplot(df, aes(Seasons)) + geom_bar() 
+plot8 <- ggplot(df, aes(Release.Season)) + geom_bar() 
 plot9 <- ggplot(df, aes(Release.isWide)) + geom_bar() 
 
 plot6
@@ -364,7 +364,7 @@ De lo observado en los gráficos se puede detallar que:
 
 - El género que más películas tiene es la categoría `drama`
 - En cuanto a la duración de las películas, se observa que la media esta al rededor de 100min. Se puede ver que exiten una serie de películas cuya duración es superior a 150min. Aunque estas aparezcan en el gráfico de Boxplot como valores extremos, no se eliminaron ya que son casos posibles.
-- En cuanto a la variable `Seasons`, se observa que existe una distribución uniforme a lo largo de todas las estaciones del años. 
+- En cuanto a la variable `Release.Season`, se observa que existe una distribución uniforme a lo largo de todas las estaciones del años. 
 - En cuanto a la variable `Release.IsWide`, se observa que existe casi el doble de películas que sólo tiene un estreno local. Sólo al rededor de 2000 películas tuvieron un estreno mundial.
 
 
@@ -387,40 +387,17 @@ df$Writer <- NULL
 df$Producer <- NULL
 ```
 
+```{r reorganización de variables en el dataset}
+# Reordenando dataframe
+df <- df[c("Title","Tomatometer","Fresh","Audience.score","Rating",
+           "Parental.Control","Genre1","Genre2","Genre3","Director","Production",
+           "DirectorIsWriter","Runtime","Release.Date", "Release.Year",
+           "Release.Season", "Release.isWide")]
 
-#### 3.9 Representación gráfica de relaciones entre variables:
-
-A continuación, se presentará diferentes gráficos con la finalidad de determinar si existe alguna relación entre las variables que se pueda ser observada visualmente:
-
-```{r representación de relaciones, warning=FALSE}
-#Representacion de relaciones
-plot10 <- ggplot(df, aes(x=Runtime, y=Audience.score)) + geom_point() 
-plot11 <- ggplot(df, aes(x=Runtime, y=Tomatometer)) + geom_point() 
-plot12 <- ggplot(aes(y = Audience.score, x = Seasons), 
-       data = df) + geom_boxplot() + ggtitle("Audience score by season")
-plot13 <- ggplot(aes(y = Tomatometer, x = Seasons), 
-       data = df) + geom_boxplot() + ggtitle("Tomatometer by season")
-plot14 <- ggplot(aes(y = Audience.score, x = DirectorIsWriter), 
-       data = df) + geom_boxplot() + ggtitle("Director is writer")
-plot15 <- ggplot(aes(y = Tomatometer, x = DirectorIsWriter), 
-       data = df) + geom_boxplot() + ggtitle("Director is writer")
-plot16 <- ggplot(aes(y = Audience.score, x = Release.Year), 
-       data = subset(df,Release.Year>2005)) + geom_boxplot() + 
-       ggtitle("Audience score by year") + coord_flip()
-plot16 <- ggplot(aes(y = Tomatometer, x = Release.Year), 
-       data = subset(df,Release.Year>2005)) + geom_boxplot() + 
-       ggtitle("Audience score by year") + coord_flip()
-plot17 <- ggplot(aes(y = Audience.score, x = as.factor(Parental.Control)), 
-       data = df) + geom_boxplot() + ggtitle("Director is writer")
-plot18 <- ggplot(aes(y = Tomatometer, x = as.factor(Parental.Control)), 
-       data = df) + geom_boxplot() + ggtitle("Director is writer")
-
-ggarrange(plot10, plot11, plot12, plot13)
-ggarrange(plot14, plot15, plot18)
-ggarrange(plot16, plot17)
+# Visualización del dataframe
+df
 
 ```
-
 
 
 # 4 Análisis de los datos.
@@ -445,10 +422,10 @@ Se creará un modelo de clasificación para clasificar las películas según si 
 
 Se realizarán dos contrastes de hipótesis para tratar de responder dos preguntas:
 
-   - ¿Las películas dirigidas por el propio escritor son mejores que las que tienen un director distinto? 
+   - ¿Las películas dirigidas por el propio escritor son mejores (tienen mayor tomatometer) que las que tienen un director distinto? 
 Se utilizarán las variables `Tomatometer` y `DirectorisWriter`.
         
-   - ¿En otoño se estrenan más películas de terror que en las demás estaciones?
+   - ¿En otoño se estrenan más películas de horror que en las demás estaciones?
 Se utilizarán las variables `Release.Season` y `Genre1`.
 
 # 4.2 Comprobación de la normalidad y homogeneidad de la varianza.
@@ -500,7 +477,7 @@ De los gráficos anteriores de la variable `Tomatometer`, se puede señalar lo s
 
 - En el gráfico QQ se observa que las películas que poseen un `Tomatometer` entre 12,5% y 87,5% se ajustan bastante bien a la línea recta teórica, pero luego encontramos en ambos extremos que los puntos se separan significativamente de la recta, obteniendo un resultado similar al de una gráfica QQ de una distribución uniforme; esto es: en el extremo derecho los puntos se encuentran por debajo de la recta, indicando que los valores en los datos no son tan extremos como lo serian los esperados por una distribución normal.De forma similar en el lado izquierdo, es decir: no son tan extremos como lo serian los esperados por una distribución normal. Esto se debe a que la variable `Tomatometer` posee como caracteristica el hecho de que se encuentra acotada entre 0 y 100.
 
-###Variable Audience.score:
+### Variable Audience.score:
 ```{r metodo grafico normalidad Audience Score}
 
 plot1 <- ggplot(df, aes(Audience.score)) +
@@ -525,7 +502,7 @@ De los gráficos de la variable `Audience.score` se observa:
 
 - En el gráfico QQ se vuelve a observar, al igual que con la variable `Tomatometer`, que en los extremos los datos se separan de la recta. Esto, de nuevo, es debido a la característica propia de la variable de ser acotada entre 0 y 100.
 
-###Variable Runtime
+### Variable Runtime
 ```{r metodo grafico normalidad Runtime}
 plot1 <- ggplot(df, aes(Runtime)) +
   geom_histogram(aes(y =..density.., fill =..count..), binwidth = 2) +
@@ -549,11 +526,11 @@ De los gráficos de la variable `Runtime` se detalla:
 - En el gráfico QQ se comprueba el comportamiento señalado en el histograma: los datos a la derecha de la curva se encuentran significativamente por encima de la recta, lo cual indica que estos poseen valores mucho mayores a los esperados en una distribución normal con media y desviación estandar similar al conjunto de datos.
 
 
-##4.2.2 Aplicación del método Analítico:
+## 4.2.2 Aplicación del método Analítico:
 
 En este apartado se aplicará un estudio de Curtosis y asimetría a cada una de las variables.
 
-###Variable Tomatometer:
+### Variable Tomatometer:
 ```{r método analítico Tomatometer}
 # Cálculo de la curtorsis
 curtosis <- kurtosi(df$Tomatometer)
@@ -566,7 +543,7 @@ sprintf("Curtosis: %.3f, Asimetría: %.3f", curtosis, asimetria)
 Los valores obtenidos, tanto en la curtosis como en la asimetría, estan en el rango de -1 a 1, lo cual señala una leve desviación de la normalidad.
 
 
-###Variable Audience Score:
+### Variable Audience Score:
 ```{r método analítico Audience Score}
 # Cálculo de la curtorsis
 curtosis <- kurtosi(df$Audience.score)
@@ -578,7 +555,7 @@ sprintf("Curtosis: %.3f, Asimetría: %.3f", curtosis, asimetria)
 ```
 Los valores de curtosis y asimetría de la variable `Audience.score` señalan también una leve desviación de la normalidad. Pese a este resultado, todavia se podría considerar como cierto el supuesto de normalidad de esta variable.
 
-###Variable Runtime:
+### Variable Runtime:
 ```{r método analítico Runtime}
 # Cálculo de la curtorsis
 curtosis <- kurtosi(df$Runtime)
@@ -592,7 +569,7 @@ En este caso, tanto la curtosis como la asimetría señalan que no es una curva 
 
 De acuerdo a estos resultados, no se puede aceptar el supuesto de normalidad en esta variable.
 
-##4.2.3 Aplicación del método de contraste.
+## 4.2.3 Aplicación del método de contraste.
 
 Debido a que la muestra es mucho mayor a 5000 registros, el test de Shapiro-Wilk no puede ser aplicado en `R`. Por su parte, el test de Kolmogrov-Smirnov, en la documentación correspondiente a su implementación en `R` se señala que este test puede presentar errores si en la data tenemos valores repetidos (que es nuestro caso), es por esto que se usará el test de Anderson-Darling para comprobar la normalidad en estas variables.
 
@@ -627,7 +604,7 @@ Se aplicará el test de homogeneidad de varianza para conocer si existe variaci�
 
 - Las variables `Tomatometer`, `Audience.score` y `Runtime`, dependiendo al `Genre1` que pertenezca la película.
 
-- Las variables `Tomatometer`, `Audience.score` y `Runtime`, dependiendo de la época del año en que fueron estrenadas (variable `Seasons`)
+- Las variables `Tomatometer`, `Audience.score` y `Runtime`, dependiendo de la época del año en que fueron estrenadas (variable `Release.Season`)
 
 ### Homogeneidad en la varianza dependiendo de Parental.control
 
@@ -665,15 +642,15 @@ Se observa en este caso que para las 24 muestras separadas por el genero al que 
 
 ```{r homogeneidad en la varianza Seasons}
 # Para variable Tomatometer
-fligner.test(df$Tomatometer ~ df$Seasons)
+fligner.test(df$Tomatometer ~ df$Release.Season)
 
 # Para variable Audience.Score
-fligner.test(df$Audience.score ~ df$Seasons)
+fligner.test(df$Audience.score ~ df$Release.Season)
 
 # Para variable Runtime
-fligner.test(df$Runtime ~ df$Seasons)
+fligner.test(df$Runtime ~ df$Release.Season)
 ```
-Por último, se puede observar que en los 4 grupos formados por la variable `Seasons`, para los casos estudiados observamos que :
+Por último, se puede observar que en los 4 grupos formados por la variable `Release.Season`, para los casos estudiados observamos que :
 
 - el p-valor en la variable `Tomatometer`es ligeramente superio a 0.05, pero lo suficiente como para aceptar que existe homogeneidad en la varianza.
 
@@ -681,4 +658,309 @@ Por último, se puede observar que en los 4 grupos formados por la variable `Sea
 
 - el p-valor de la variable `Runtime`es inferior a 0.05, por lo que se rechaza la hipótesis de homogeneidad en la varianza.
 
+## 4.3 Aplicación de pruebas estadísticas para comparar los grupos de datos
 
+### Correlación
+
+Como se ha comentado en el apartado 4.1, en primer lugar se crea la matriz de correlación, utilizando las variables numéricas y las dicotómicas, y se comentan las correlaciones más apreciables.
+
+```{r correlaciones}
+cor.df <- cor(df[c(2,4,13)],use="complete.obs")
+corrplot(cor.df, method = 'number')
+```
+
+   - Existe una correlación evidente ente `Tomatometer` y `Audience.score`, ya que ambas variables puntúan la valoración de las películas. Sin embargo, esta correlación es de 0,62, y aunque la correlación es clara, no es tan fuerte como se podría esperar.
+   
+   - Las películas tienen una ligera tendencia a estar mejor puntuadas cuando su duración es mayor, ya que la correlación de `Audience.Score` y `Runtime` es positiva, 0.19.
+  
+A continuación se representa la relación entre las "etiquetas" `Audience.Score`, `Tomatometer` y `Fresh` con las demás variables.
+
+```{r representación de correlaciones 0}
+p41 <- ggplot(aes(y = Tomatometer, x = Audience.score), data = df) + 
+       geom_point() + ggtitle("Audience Score and Tomatometer")
+p42 <- ggplot(data = df,aes(x=Genre1,fill=Fresh))+geom_bar() + 
+       coord_flip() + ggtitle("Fresh by genre")
+grid.arrange(p41, p42, ncol=2, nrow=1)
+```
+  
+   - De igual manera que en la matriz de relaciones, `Tomatometer` y `Audience.score` presentan una relación directa, generalmente cuando crece `Audience.score` lo hace también `Tomatometer`.
+   
+   - En cuanto a los *géneros*, destaca los documentales y las biografías, que tienen un porcentaje de *fresh* alto, mientras que comedia o acción tienden a tener críticas negativas. El género con mayor número de películas es drama.
+   
+```{r representación de correlaciones 1}
+p43 <- ggplot(df, aes(x=Runtime, y=Audience.score)) + 
+       geom_point() + ggtitle("Audience score by runtime")
+
+p44 <- ggplot(df, aes(x=Runtime, y=Tomatometer)) + 
+       geom_point() + ggtitle("Tomatometer score by runtime")
+
+grid.arrange(p43, p44, ncol=1, nrow=2)
+```
+
+   - En cuanto al `Runtime`, se aprecia una ligera tendencia a que las películas con mayor duración tengan una mayor puntuación, tal y como se indicaba en la matriz de correlaciones.
+
+```{r representación de correlaciones 2, warning=FALSE}
+p45 <- ggplot(data = df,aes(x=Rating,fill=Fresh))+geom_bar() + 
+       ggtitle("Fresh by rating")
+
+p46 <- ggplot(data = df,aes(x=Parental.Control,fill=Fresh))+geom_bar() + 
+       ggtitle("Fresh by Parental Control")
+
+p47 <- ggplot(aes(y = Audience.score, x = (Parental.Control)), data = df) + 
+       geom_boxplot() + ggtitle("Audience Score by Parental control")
+
+p48 <- ggplot(aes(y = Tomatometer, x = (Parental.Control)), data = df) + 
+       geom_boxplot() + ggtitle("Tomatometer score by Parental control")
+
+grid.arrange(p45, p46, p47, p48, ncol=2, nrow=2)
+```
+
+  - En cuanto a las restricciones de edad de la películas, el gráfico de arriba a la derecha mustra claramente que el porcentaje de películas con crítica positiva es mucho mayor en la películas con restricciones que en las que son para todos los públicos.
+  
+  - Llama la atención que esta diferencia es mucho más alta en el caso de las puntuaciones de críticos (`Tomatometer`) que en el público general.
+
+```{r representación de correlaciones 3}
+p49 <- ggplot(data = df,aes(x=Release.Season,fill=Fresh))+geom_bar() + 
+       ggtitle("Fresh by release Release.Season")
+
+p410 <- ggplot(aes(y = Audience.score, x = Release.Season), data = df) + 
+        geom_boxplot() + ggtitle("Audience score by release Release.Season")
+
+p411 <- ggplot(aes(y = Tomatometer, x = Release.Season), data = df) + geom_boxplot() + 
+        ggtitle("Tomatometer by release Release.Season")
+
+grid.arrange(p410, p411, p49, ncol=2, nrow=2)
+```
+
+   - En cuanto a la estación en que se estrenan las películas, no se aprecia ninguna tendencia significativa, más allá de que en invierno se estrenan menos películas que el resto del año.
+
+```{r representación de correlaciones 4}
+p412 <- ggplot(data = subset(df,Release.Year>2005),
+               aes(x=Release.Year, fill=Fresh))+geom_bar() + 
+               ggtitle("Fresh by release year") + coord_flip()
+
+p411a <- ggplot(data = subset(df,Release.Year>2005),
+                aes(x=Release.Year,fill=Fresh))+geom_bar(position="fill") + 
+                ggtitle("Fresh percentaje by release year") + 
+                coord_flip() +ylab("Frecuencia")
+
+p413 <- ggplot(aes(y = Audience.score, x = Release.Year), 
+               data = subset(df,Release.Year>2005)) + geom_boxplot() + 
+               ggtitle("Audience score by year") + coord_flip()
+
+p414 <- ggplot(aes(y = Tomatometer, x = Release.Year), 
+               data = subset(df,Release.Year>2005)) + geom_boxplot() + 
+               ggtitle("Tomatometer score by year") + coord_flip()
+
+grid.arrange(p412, p411a, p413, p414, ncol=2, nrow=2)
+```
+
+   - En cuanto al año de esteno de la películas, se puede apreciar que la opinión de la crítica ha ido mejorando paulatinamente con el paso de los años, y cada año el porcentaje de películas con críticas positivas parece mejorar ligeramente.
+   
+   - Por otra parte, en 2006 se alcanzó un pico de estenos, y desde ese año cada año se estrenan menos películas.
+
+```{r representación de correlaciones 5, warning=FALSE}
+p415 <- ggplot(data = df,aes(x=Release.isWide,fill=Fresh))+geom_bar() + 
+        ggtitle("Fresh by type of release")
+
+p415a <- ggplot(data = df,aes(x=Release.isWide,fill=Fresh)) + 
+         geom_bar(position="fill") + 
+         ggtitle("Fresh percentaje by type of release") + 
+         ylab("Frecuencia")
+
+p416 <- ggplot(aes(y = Audience.score, x = (Release.isWide)), data = df) + 
+        geom_boxplot() + ggtitle("Audience score by type of release")
+
+p417 <- ggplot(aes(y = Tomatometer, x =  (Release.isWide)), data = df) + 
+        geom_boxplot() + ggtitle("Tomatometer score by type of release")
+
+grid.arrange(p415, p415a, p416, p417, ncol=2, nrow=2)
+```
+
+   - Curiosamente, las películas con un estreno "limited" tienen un mayor porcentaje de críticas positivas por parte de los críticos que las "wide", mientras que en el caso de la audiencia no es así.
+
+```{r representación de correlaciones 6, warning=FALSE}
+p418 <- ggplot(data = df,aes(x=DirectorIsWriter,fill=Fresh)) + 
+        geom_bar() + ggtitle("Fresh by DirectorIsWriter")
+
+p418a <- ggplot(data = df,aes(x=DirectorIsWriter,fill=Fresh)) + 
+         geom_bar(position="fill") + 
+         ggtitle("Fresh percentaje by DirectorIsWriter") + 
+         ylab("Frecuencia")
+
+p419 <- ggplot(aes(y = Audience.score, x = as.factor(DirectorIsWriter)), 
+              data = df) + geom_boxplot() + 
+              ggtitle("Audience score by DirectorIsWriter")
+
+p420 <- ggplot(aes(y = Tomatometer, x =  as.factor(DirectorIsWriter)), 
+               data = df) + geom_boxplot() + 
+               ggtitle("Tomatometer score by DirectorIsWriter")
+
+grid.arrange(p418, p418a, p420, p419, ncol=2, nrow=2)
+```
+
+   - En cuanto las películas que han sido dirigidas por el propio escritor, al igual que sucede con el tipo de esteno, se aprecia una diferencia clara en el caso de las puntuaciones de los críticos (`Tomatometer` y `Fresh`) en favor de las películas que han sido dirigidas por su escritor, mientras que en el caso del público general no se aprecia esta tendencia.
+
+
+
+### Clasificación con regresión logística
+
+A continuación, se crea un modelo de regresión logística, con regresores tanto cuantitativos como cualitativos, para tratar de predecir el valor de la etiqueta dicotómica Fresh de las distintas películas, es decir, clasificacrlas en "fresh" o "rotten".
+
+A partir del análisis de correlaciones, se usarán las variables que tienen una correlación apreciable con la etiqueta `Fresh`: `Parental.Control`, `DirectorIsWriter`, `Runtime`, `Genre1`, `Release.Year` y `Release.isWide`.
+
+En primer lugar, se preparan los datos para la creación del modelo, seleccionando las variables especificadas y eliminando los elementos nulos. Se eliminan los años anteriores al 2006, ya que tienen una cantidad de registros muy escasa. Además, se genera una **distribución de Bernoulli con la etiqueta Fresh**.
+   
+```{r regresion logistica}
+# Preparación de datos
+df2 <- df[c("Tomatometer","Fresh", "Parental.Control","DirectorIsWriter",
+            "Runtime", "Release.Year","Release.isWide","Genre1")]
+
+df2 <-  df2[complete.cases(df2), ]
+df2 <- df2[df2$Release.Year>2005,]
+Fresh.log <- df2$Fresh
+Fresh.log[df2$Fresh=="Yes"] <- 1
+Fresh.log[df2$Fresh=="No"] <- 0
+Fresh.log <- as.integer(Fresh.log)
+```
+
+Se crea el modelo de regresión logística, donde la variable dependiente es `Fresh` y las independientes `Parental.Control`, `DirectorIsWriter`, `Runtime`, `Release.Year` y `Release.isWide`, obteniendo un AIC de 8250,1.
+
+```{r modelo regresion logistica, warning=FALSE}
+attach(df2)
+#Creación del modelo
+model.log=glm(formula=Fresh.log~Runtime+factor(Parental.Control) +
+              factor(Release.Year) + factor(DirectorIsWriter) + 
+              factor(Release.isWide) +
+              factor(Genre1),family=binomial(link=logit))
+
+summary(model.log)
+```
+
+Finalmente, se predicen las etiquetas del conjunto de datos y se obtiene la matriz de confusión y la precisión del modelo.
+
+```{r resultados modelo regresion logistica}
+#Predicción de valores
+model.pred <- data.frame(values=predict(model.log,as.factor(Fresh),
+                                        type = "response"))
+
+model.pred$predicted <- factor(ifelse(model.pred$values>0.5, "Yes", "No"))
+
+conf_matrix <- confusionMatrix(model.pred$predicted,(as.factor(Fresh)))
+
+conf_matrix$table
+```
+
+El modelo clasifica correctamente 4066 de los 6431 registros del conjunto de datos, obteniendo 1157 falsos negativos y 1208 falsos positivos.
+
+```{r precision modelo regresion logistica}
+conf_matrix$overall
+```
+
+La precisión del modelo es del 63,23%, lo cual se podría catalogar como aceptable. El porcentaje es claramente superior al 50%, pero no lo suficiente como para que sea posible clasificar con garantías si una película tendrá una crítica favorable o no a partir de su duración, género, año y tipo de estreno, presencia o de restricciones de edad y coincidencia del director con el escritor.
+
+### Regresión lineal múltiple
+
+A continuación, se crea un modelo de regresión lineal múltiple, con regresores tanto cuantitativos como cualitativos, para tratar de predecir el valor de la etiqueta `Tomatometer` de las distintas películas.
+
+```{r regresion lineal}
+model.lin=lm(Tomatometer~Runtime + factor(Parental.Control) + 
+            factor(Release.Year) + factor(Genre1) + 
+            factor(DirectorIsWriter) + factor(Release.isWide),data=df2)
+summary(model.lin)
+```
+
+El coeficiente de determinación ajustado obtenido con el modelo es de 0.136, lo cual se podría calificar como un ajuste bastante pobre.
+
+Por último, los siguientes gráficos muestran; en primer lugar, la distribución de errores y, en segundo lugar, su similitud con una distribución normal.
+
+```{r resultados regresion lineal}
+
+residuos <- rstandard(model.lin)
+valores_ajustados <- fitted(model.lin)
+plot(valores_ajustados, residuos, main="Residuos vs valores ajustados")
+qqnorm(residuos, main="QQplot normalidad residuos")
+qqline(residuos)
+```
+
+### Contraste de Hipótesis.
+
+Para finalizar el estudio sobre este dataset, se realizarán dos contraste de hipótesis:
+
+#### Contraste 1: Las películas dirigidas por el propio escritor son mejores (tienen mayor Tomatometer) que las que tienen un director distinto
+
+Lo primero será separar las dos muestras, por un lado las películas cuyo director es también el escrito y las que no y las graficamos para observar su distribución:
+```{r Separación de muestras}
+# Separamos las muestras y nos quedamos solo con la variable Tomatometer
+director.and.writer <- df[df$DirectorIsWriter == 1,]
+just.director <- df[df$DirectorIsWriter == 0,]
+
+# Nos quedamos solo con las variables DirectorIsWriter y Tomatometer
+director.and.writer <- subset(director.and.writer, select = c(DirectorIsWriter,
+                                                              Tomatometer))
+
+just.director <- subset(just.director, select = c(DirectorIsWriter,
+                                                              Tomatometer))
+
+# Quitamos los valores NA
+director.and.writer <- director.and.writer[!is.na(director.and.writer),]
+just.director <- just.director[!is.na(just.director),]
+
+# Graficamos ambas variables para ver su distribución
+plot1 <- ggplot(just.director, aes(Tomatometer)) + geom_histogram(binwidth=2) +
+         ggtitle("Tomatometer by Just Director")
+plot2 <- ggplot(director.and.writer, aes(Tomatometer)) + 
+         geom_histogram(binwidth=2) +
+         ggtitle("Tomatometer by Director and Writer")
+
+ggarrange(plot1,plot2)
+```
+
+A simple vista, en el gráfico de `Tomatometer by Director and Writer`, parece existir una tendencia a mejorar la puntuación cuando el director es también el escritor.
+
+Se comprobará el supuesto de normalidad de ambas variables, para ello se realizará un test de Shapiro-Wilck y un grafico QQ:
+
+```{r supuesto de normalidad de variables director.and.writer, warning=FALSE}
+ggqqplot(director.and.writer, x="Tomatometer", add = "qqline", 
+         ggtheme = theme_minimal(),
+         title = "QQplot Tomatometer by Director and Writer", ylim = c(0,100) )
+
+shapiro.test(director.and.writer$Tomatometer)
+```
+```{r supuesto de normalidad de variable just.director, warning=FALSE}
+ggqqplot(just.director, x="Tomatometer", add = "qqline", 
+         ggtheme = theme_minimal(),
+         title = "QQplot Tomatometer by Just Director", ylim = c(0,100) )
+
+shapiro.test(just.director$Tomatometer)
+```
+En ambos casos el p-valor del test de Shapiro es menor a 0.05, por lo que no se puede suponer normalidad.
+
+***Consideraciones:***
+
+Se realizarán las siguientes consideraciones:
+
+-Ambas muestras no distribuyen normalmente, pero al ser lo suficientemente grandes, por el teorema del límite central, se puede afirmar que la media de cada muestra se acerca a la media poblacional.
+
+-Cada muestra, pertenece a una población distinta e independiente.
+
+-Se desconoce la varianza de las poblaciones, pero se suponen iguales.
+
+
+A partir de lo anterior, se aplicará el análisis de contraste sobre la diferencia de medias cuando la **distribución de las varibales es normal y la varianza de ambas es desconocida pero igual**.
+
+Así, se plantearan las siguientes Hipótesis Nula: **La media de la puntuación `Tomatometer` de las películas cuyo director es también el escritor, es IGUAL al de las películas donde esto no sucede**
+
+Esta hipótesis se traduce en:
+
+**Ho: Xm_director.and.writer - Xm_just.director = 0**
+**H1: Xm_director.and.writer - Xm_just.director > 0**
+
+```{r aplicando el t.test}
+
+t.test(director.and.writer$Tomatometer,just.director$Tomatometer, 
+       alternative = "greater")
+
+```
+Como se observa, el p-valor obtenido es menor a 0.05, por lo que se rechaza la hipótesis nula de que las medias de la puntuación `Tomatometer` son iguales, y se acepta la hipótesis alternativa de que **La media de las puntuaciones `Tomatometer`de las películas cuyo director es también el escritor es mayor que la media de las películas que no cumplen esta condición**
+        
