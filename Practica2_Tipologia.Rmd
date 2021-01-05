@@ -417,9 +417,9 @@ Para el estudio de normalidad, procederemos a aplicar tres métodos:
 
 Luego, una vez finalizada la aplicación de estos métodos, nos apoyaremos en los resultados obtenidos para llegar a una conclusión sobre la normalidad de estas variables.
 
-## 4.2.1 Aplicación del Método Gráfico:
+### 4.2.1 Aplicación del Método Gráfico:
 
-### Variable: Tomatometer:
+#### Variable: Tomatometer:
 
 ```{r metodo grafico normalidad Tomatometer}
 # Gráfica de histograma de Tomatometer junto con una curva 
@@ -442,7 +442,7 @@ De los gráficos anteriores de la variable `Tomatometer`, se puede señalar lo s
 
 - En el gráfico QQ se observa que las películas que poseen un `Tomatometer` entre 12,5% y 87,5% se ajustan bastante bien a la línea recta teórica, pero luego encontramos en ambos extremos que los puntos se separan significativamente de la recta, obteniendo un resultado similar al de una gráfica QQ de una distribución uniforme; esto es: en el extremo derecho los puntos se encuentran por debajo de la recta, indicando que los valores en los datos no son tan extremos como lo serian los esperados por una distribución normal.De forma similar en el lado izquierdo, es decir: no son tan extremos como lo serian los esperados por una distribución normal. Esto se debe a que la variable `Tomatometer` posee como caracteristica el hecho de que se encuentra acotada entre 0 y 100.
 
-### Variable Audience.score:
+#### Variable Audience.score:
 ```{r metodo grafico normalidad Audience Score}
 plot1 <- ggplot(df, aes(Audience.score)) +
   geom_histogram(aes(y =..density.., fill =..count..), binwidth = 2) +
@@ -463,7 +463,7 @@ De los gráficos de la variable `Audience.score` se observa:
 
 - En el gráfico QQ se vuelve a observar, al igual que con la variable `Tomatometer`, que en los extremos los datos se separan de la recta. Esto, de nuevo, es debido a la característica propia de la variable de ser acotada entre 0 y 100.
 
-### Variable Runtime
+#### Variable Runtime
 ```{r metodo grafico normalidad Runtime}
 plot1 <- ggplot(df, aes(Runtime)) +
   geom_histogram(aes(y =..density.., fill =..count..), binwidth = 2) +
@@ -485,11 +485,11 @@ De los gráficos de la variable `Runtime` se detalla:
 - En el gráfico QQ se comprueba el comportamiento señalado en el histograma: los datos a la derecha de la curva se encuentran significativamente por encima de la recta, lo cual indica que estos poseen valores mucho mayores a los esperados en una distribución normal con media y desviación estandar similar al conjunto de datos.
 
 
-## 4.2.2 Aplicación del método Analítico:
+### 4.2.2 Aplicación del método Analítico:
 
 En este apartado se aplicará un estudio de Curtosis y asimetría a cada una de las variables.
 
-### Variable Tomatometer:
+#### Variable Tomatometer:
 ```{r método analítico Tomatometer}
 # Cálculo de la curtorsis
 curtosis <- kurtosi(df$Tomatometer)
@@ -500,7 +500,7 @@ sprintf("Curtosis: %.3f, Asimetría: %.3f", curtosis, asimetria)
 Los valores obtenidos, tanto en la curtosis como en la asimetría, estan en el rango de -1 a 1, lo cual señala una leve desviación de la normalidad.
 
 
-### Variable Audience Score:
+#### Variable Audience Score:
 ```{r método analítico Audience Score}
 # Cálculo de la curtorsis
 curtosis <- kurtosi(df$Audience.score)
@@ -510,7 +510,7 @@ sprintf("Curtosis: %.3f, Asimetría: %.3f", curtosis, asimetria)
 ```
 Los valores de curtosis y asimetría de la variable `Audience.score` señalan también una leve desviación de la normalidad. Pese a este resultado, todavia se podría considerar como cierto el supuesto de normalidad de esta variable.
 
-### Variable Runtime:
+#### Variable Runtime:
 ```{r método analítico Runtime}
 # Cálculo de la curtorsis
 curtosis <- kurtosi(df$Runtime)
@@ -522,7 +522,7 @@ En este caso, tanto la curtosis como la asimetría señalan que no es una curva 
 
 De acuerdo a estos resultados, no se puede aceptar el supuesto de normalidad en esta variable.
 
-## 4.2.3 Aplicación del método de contraste.
+### 4.2.3 Aplicación del método de contraste.
 
 Debido a que la muestra es mucho mayor a 5000 registros, el test de Shapiro-Wilk no puede ser aplicado en `R`. Por su parte, el test de Kolmogrov-Smirnov, en la documentación correspondiente a su implementación en `R` se señala que este test puede presentar errores si en la data tenemos valores repetidos (que es nuestro caso), es por esto que se usará el test de Anderson-Darling para comprobar la normalidad en estas variables.
 
@@ -543,7 +543,7 @@ Finalmente, a partir de los métodos utilizados para comprobar la normlidad en l
 - Las variables `Tomatometer`, `Audience.score`  y `Runtime` no poseen una distribución normal. Pese a esto, de acuerdo al teorema del límite central, se puede afirmar que al ser una muestra lo suficientemente grande, la media de la muestra se acerca a la media poblacional.
 
 
-## 4.2.4 Comprobación de homogeneidad en la varianza.
+### 4.2.4 Comprobación de homogeneidad en la varianza.
 
 A continuación, se estudiará la homogeneidad de varianzas utilizando el test de ***Fligner-Killeen***. Este se trata de un método no paramétrico. Es también una alternativa cuando no se cumple la condición de normalidad entre las muertras.
 
@@ -555,7 +555,7 @@ Se aplicará el test de homogeneidad de varianza para conocer si existe variaci�
 
 - Las variables `Tomatometer`, `Audience.score` y `Runtime`, dependiendo de la época del año en que fueron estrenadas (variable `Release.Season`)
 
-### Homogeneidad en la varianza dependiendo de Parental.control
+#### Homogeneidad en la varianza dependiendo de Parental.control
 
 ```{r homogeneidad en la varianza Parental control}
 # Para variable Tomatometer
@@ -571,7 +571,7 @@ En el caso de muestras divididas a partir de la variable `Parental.Control`, se 
 
 - con respecto a las variables `Audience.scroe` y `Runtime`, el p-value en ambos casos es mayor a 0.05, por lo que se acepta la hipótesis nula de que la varianza es homogena.
 
-### Homogeneidad en la varianza dependiendo de Genre1
+#### Homogeneidad en la varianza dependiendo de Genre1
 
 ```{r homogeneidad en la varianza Genre1}
 # Para variable Tomatometer
@@ -583,7 +583,7 @@ fligner.test(df$Runtime ~ df$Genre1)
 ```
 Se observa en este caso que para las 24 muestras separadas por el genero al que pertenece cada película, en ninguno de los casos evaluados el p-valor fue superior a 0.05, por lo que se rechaza la posibilidad de homogeneidad en la varianza.
 
-### Homogeneidad en la varianza dependiendo de Release.Seasons
+#### Homogeneidad en la varianza dependiendo de Release.Seasons
 
 ```{r homogeneidad en la varianza Seasons}
 # Para variable Tomatometer
