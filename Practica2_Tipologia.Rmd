@@ -397,7 +397,7 @@ Se utilizarán las variables `Tomatometer` y `DirectorisWriter`.
 Se utilizarán las variables `Audience.score` y `Genre1`.
 
 
-# 4.2 Comprobación de la normalidad y homogeneidad de la varianza.
+## 4.2 Comprobación de la normalidad y homogeneidad de la varianza.
 
 En este apartado se analizará la normalidad y la homogenidad de la varianza de las variables aleatorias del dataset:
 
@@ -1000,11 +1000,36 @@ qqline(residuos)
 #### Contraste de Hipótesis.
 
   - **Contraste 1:**
-      - Se comprobó que las dos muestras obtenidas no presentaban una distribución normal. Aún así se pudo realizar el contraste de hipótesis debido al tamaño de las muestras y al hecho de que comparamos sus medias.
-      - Se rechazó la hipótesis nula de que la media muestral de la puntuación `Tomatometer` de las películas cuyo director es también el escrito era igual a la media muestral de las películas que no cumplian con ese requisito.
-      - Se comprobó, a través de este contraste, que si existe una tendencia positiva a estar mejor valorada una película cuando su director es tambien el escritor.
+     
+     - Se comprobó que las dos muestras obtenidas no presentaban una distribución normal. Aún así se pudo realizar el contraste de hipótesis debido al tamaño de las muestras y al hecho de que comparamos sus medias.
+     
+     - Se rechazó la hipótesis nula de que la media muestral de la puntuación `Tomatometer` de las películas cuyo director es también el escrito era igual a la media muestral de las películas que no cumplian con ese requisito.
+  
+  - Se comprobó, a través de este contraste, que si existe una tendencia positiva a estar mejor valorada una película cuando su director es tambien el escritor.
       
   - **Contraste 2:**
-      - De nuevo se comprobó que las dos muestras obtenidas no presentaban una distribución normal. Aún así se pudo realizar el contraste de hipótesis debido al tamaño de las muestras y al hecho de que comparamos sus medias.
-      - Se rechazó la hipótesis nula de que la media muestral de la puntuación `Audience.score` de las películas cuya categoría es drama era igual a la media muestral de las películas de categoría horror.
-      - Se aceptó la hipótesis nula de estas medias muestrales no eran iguales y que de hecho, las películas de drama estan mejor puntuadas por el público que las peliculas de horror.
+    
+    - De nuevo se comprobó que las dos muestras obtenidas no presentaban una distribución normal. Aún así se pudo realizar el contraste de hipótesis debido al tamaño de las muestras y al hecho de que comparamos sus medias.
+    
+    - Se rechazó la hipótesis nula de que la media muestral de la puntuación `Audience.score` de las películas cuya categoría es drama era igual a la media muestral de las películas de categoría horror.
+    
+    - Se aceptó la hipótesis nula de estas medias muestrales no eran iguales y que de hecho, las películas de drama estan mejor puntuadas por el público que las peliculas de horror.
+      
+# Generación de CSV resultante
+
+```{r generacion csv}
+write.csv(df,'.\\recogiendo_tomates_final.csv',row.names=FALSE)
+```
+
+# Firma
+
+\begin{tabular}{| c | c |}
+\hline
+  Contribuciones & Firma \\ \hline
+  Investigación previa  & D.B.M, R.G.H \\ \hline
+  Redacción de respuestas & D.B.M, R.G.H \\ \hline
+  Desarrollo de código & D.B.M, R.G.H \\ \hline
+\end{tabular} 
+
+
+
