@@ -419,7 +419,8 @@ Luego, una vez finalizada la aplicación de estos métodos, nos apoyaremos en lo
 
 ### 4.2.1 Aplicación del Método Gráfico:
 
-#### Variable: Tomatometer:
+#### Variable Tomatometer
+:
 
 ```{r metodo grafico normalidad Tomatometer}
 # Gráfica de histograma de Tomatometer junto con una curva 
@@ -436,13 +437,16 @@ plot2 <- ggqqplot(df, x="Tomatometer", add = "qqline", ggtheme = theme_minimal()
          title = "QQplot Tomatometer", ylim = c(0,100) )
 ggarrange(plot1, plot2)
 ```
+
 De los gráficos anteriores de la variable `Tomatometer`, se puede señalar lo siguiente:
 
 - En el histograma, visualmente, no se detalla que la variable siga una distribución normal. Existe un comportamiento marcado de gran cantidad de valores entre el 75% y 100%.
 
 - En el gráfico QQ se observa que las películas que poseen un `Tomatometer` entre 12,5% y 87,5% se ajustan bastante bien a la línea recta teórica, pero luego encontramos en ambos extremos que los puntos se separan significativamente de la recta, obteniendo un resultado similar al de una gráfica QQ de una distribución uniforme; esto es: en el extremo derecho los puntos se encuentran por debajo de la recta, indicando que los valores en los datos no son tan extremos como lo serian los esperados por una distribución normal.De forma similar en el lado izquierdo, es decir: no son tan extremos como lo serian los esperados por una distribución normal. Esto se debe a que la variable `Tomatometer` posee como caracteristica el hecho de que se encuentra acotada entre 0 y 100.
 
-#### Variable Audience.score:
+#### Variable Audience.score
+:
+
 ```{r metodo grafico normalidad Audience Score}
 plot1 <- ggplot(df, aes(Audience.score)) +
   geom_histogram(aes(y =..density.., fill =..count..), binwidth = 2) +
@@ -457,6 +461,7 @@ plot2 <- ggqqplot(df, x="Audience.score", add = "qqline",
          title = "QQplot Audience.score" , ylim = c(0,100))
 ggarrange(plot1,plot2)
 ```
+
 De los gráficos de la variable `Audience.score` se observa:
 
 - En el histograma se detalla un comportamiento similar a una curva de distribución normal.
@@ -464,6 +469,8 @@ De los gráficos de la variable `Audience.score` se observa:
 - En el gráfico QQ se vuelve a observar, al igual que con la variable `Tomatometer`, que en los extremos los datos se separan de la recta. Esto, de nuevo, es debido a la característica propia de la variable de ser acotada entre 0 y 100.
 
 #### Variable Runtime
+:
+
 ```{r metodo grafico normalidad Runtime}
 plot1 <- ggplot(df, aes(Runtime)) +
   geom_histogram(aes(y =..density.., fill =..count..), binwidth = 2) +
@@ -478,6 +485,7 @@ plot2 <- ggqqplot(df, x="Runtime", add = "qqline",
          title = "QQplot Runtime" , ylim = c(50,350))
 ggarrange(plot1,plot2)
 ```
+
 De los gráficos de la variable `Runtime` se detalla:
 
 - El histobrama presenta una fuerte concentración de datos aproximadamente entorno a los valores 90 - 100. También se observa una distribución con asimetría hacia la derecha (positiva), presentando una larga cola derecha.
@@ -992,6 +1000,8 @@ qqline(residuos)
 
 ### Regresión lineal múltiple
 
+  - El gráfico de residuos frente valores ajustados, muestra un patrón aleatorio de los residuos, mientras que el QQ Plot indica que la mayoría de datos siguen la distribución normal, aunque en los extremos se desvían.
+  
   - El coeficiente de determinación ajustado obtenido con el modelo es de 0.227, lo cual se podría calificar como un ajuste bastante pobre.
 
   - El modelo permite obtener una ligera aproximación de la puntuación de una película, pero no es sufieciente para concluir en que haya bondad en el ajuste, por lo que los resultados no permiten resolver la cuestión de cuál será la puntuación de una película a partir de su duración, género, año y tipo de estreno, presencia o de restricciones de edad y coincidencia del director con el escritor.
@@ -1030,6 +1040,3 @@ write.csv(df,'.\\recogiendo_tomates_final.csv',row.names=FALSE)
   Redacción de respuestas & D.B.M, R.G.H \\ \hline
   Desarrollo de código & D.B.M, R.G.H \\ \hline
 \end{tabular} 
-
-
-
