@@ -944,6 +944,65 @@ t.test(director.and.writer$Tomatometer,just.director$Tomatometer,
 ```
 Como se observa, el p-valor obtenido es menor a 0.05, por lo que se rechaza la hipótesis nula de que las medias de la puntuación `Tomatometer` son iguales, por lo que se acepta la hipótesis alternativa de que **La media de las puntuaciones `Tomatometer`de las películas cuyo director es también el escritor es mayor que la media de las películas que no cumplen esta condición**
 
+#### Contraste 2: Las películas de categoría Drama tienen mejor Audience.score que las peliculas de categoria Horror.
+
+De nuevo, lo primero que haremos será obtener del dataset las dos muestras que deseamos y graficarlas para ver sus distribuciones:
+
+```{r Obtención de muestras categorias}
+# Obtenemos las películas pertenecientes a cada categoría
+drama.movies <- df[df$Genre1=="drama",]
+horror.movies <- df[df$Genre1 == "horror",]
+## Nos quedamos solo con las variables DirectorIsWriter y Tomatometer
+drama.movies <- subset(drama.movies, select = c(Genre1, Audience.score))
+horror.movies <- subset(horror.movies, select = c(Genre1, Audience.score))
+# Graficamos ambas variables para ver su distribución
+plot1 <- ggplot(drama.movies, aes(Audience.score)) + geom_histogram(binwidth=2) +
+         ggtitle("Audience Score by drama movies")
+plot2 <- ggplot(horror.movies, aes(Audience.score)) + 
+         geom_histogram(binwidth=2) +
+         ggtitle("Audience Score by Horror movies")
+ggarrange(plot1,plot2)
+```
+Por observación de las gráficas, se observa que:
+
+- La gráfica de Audience Score by drama movies, presenta una cierta asimetría hacia la izquierda, aunque su distribución se parece bastante a la distribución normal.
+
+- La gráfica de Audience Score by Horror movies, presenta a su vez un asimetría hacia la derecha; pero de igual forma parece tener una distribución que tiende a ser normal.
+
+Pasaremos ahora a comprobar el supuesto de normalidad. Para esto, realizaremos nuevamente un gráfico QQ y un test de Shapiro-Wilk para cada muestra
+
+```{r supuesto de normalidad de variables director.and.writer, warning=FALSE}
+ggqqplot(drama.movies, x="Audience.score", add = "qqline", 
+         ggtheme = theme_minimal(),
+         title = "QQplot Audience Score by drama movie", ylim = c(0,100) )
+shapiro.test(drama.movies$Audience.score)
+```
+
+```{r supuesto de normalidad de variables director.and.writer, warning=FALSE}
+ggqqplot(horror.movies, x="Audience.score", add = "qqline", 
+         ggtheme = theme_minimal(),
+         title = "QQplot Audience Score by drama movie", ylim = c(0,100) )
+shapiro.test(horror.movies$Audience.score)
+```
+
+Se observa que en ambas no es posible aceptar el supuesto de normalidad. Pero nuevamente, a partir del teorema del límite central y debido a que ambas muestras son mayores a 30, se puede se puede afirmar que la media de cada muestra se acerca a la media poblacional.
+
+Así, se planteará las siguiente Hipótesis Nula: **La media de la puntuación `Audience.score` de las películas cuya categoría es drama es IGUAL al de las películas cuya categoría es terror.**
+
+Lo anterior se traduce en:
+
+**Ho: Xm_drama.movies - Xm_horror.movies = 0**
+**H1: Xm_drama.moviesr - Xm_horror.movies > 0**
+
+```{r aplicando el t.test}
+t.test(drama.movies$Audience.score,horror.movies$Audience.score, 
+       alternative = "greater")
+```
+
+Del contraste de hipótesis se observa que el p-valor es menor a 0.05, por lo que se rechazaría la hipótesis nula de que ambas medias son iguales.
+
+Por tal motivo, se acepta la hipótesis alternativa de que **La media de la puntuacion `Audience.score` de las películas de drama es mayor que la media de dicha puntuación en las películas de horror**
+
 # 5 Representación de los resultados a partir de tablas y gráficas.
 
 ### Correlación
