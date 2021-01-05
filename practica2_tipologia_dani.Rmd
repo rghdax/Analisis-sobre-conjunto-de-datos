@@ -93,13 +93,10 @@ A continuación se procederá a realizar la limpieza de cada una de las variable
 En este apartado también se crearán los distintos campos comentados anteriormente,  derivados de la información contenida en el dataset original.
 
 ```{r carga de fichero con datos}
-
 df <- read.csv(file="https://raw.githubusercontent.com/
 dbagan13/WebScrapping/main/csv/recogiendo_tomates.csv",header=TRUE,sep=",")
-
 # Eliminando columna cargada como X
 df <- subset(df, select = -c(X))
-
 #Tratamiento inicial de nulos y cadenas vacías
 df$Director[df$Director==""] <- NA
 df$Producer[df$Producer==""] <- NA
@@ -112,16 +109,12 @@ Se eliminó la columna `X` ya que realmente no aporta al análisis. Se le asigno
 #### Limpieza varibale Tomatometer.
 
 ```{r Limpieza de variable Tomatometer}
-
 # Eliminando simbolo %
 df.Tomatometer <- as.integer(str_remove_all(df$Tomatometer, "%"))
-
 # Agregando la variable Tomatometer sin simbolo al dataset original
 df$Tomatometer <- df.Tomatometer 
-
 # Conteo de NA
 summary(df$Tomatometer)
-
 # Eliminando NA de Tomatometer
 df <- df[complete.cases(df$Tomatometer), ]
 ```
@@ -138,11 +131,9 @@ Como se comento inicialmente, esta variable se calculará siguiendo el criterio 
 ```{r Creación de la variable Fresh}
 # La variable Fresh será igual a Yes cuando el Tomatometer sea >= 60 y No en caso
 # contrario
-
 df.fresh <- df$Tomatometer
 df.fresh[df.fresh >= 60] <- "Yes"
 df.fresh[df.fresh != "Yes"] <- "No"
-
 df$Fresh <- df.fresh
 ``` 
 
@@ -151,16 +142,12 @@ df$Fresh <- df.fresh
 Al igual que se hizo con la varible `Tomatometer`, a esta varible le quitaremos el simbolo de % y eliminaremos los `NA` (331 registros), ya que esta es también una variable de interés para futuros analásis.
 
 ```{r Limpieza variable Audience Score}
-
 # Eliminando simbolo % 
 df.Audience.score <- as.integer(str_remove_all(df$Audience.score, "%"))
-
 # Agregando la variable Audience Score sin símbolo al dataset original
 df$Audience.score <- df.Audience.score
-
 # conteo de NA 
 summary(df$Audience.score)
-
 # Eliminando NA's de variable Audience Score. 
 df <- df[complete.cases(df$Audience.score), ] 
 ```
@@ -172,16 +159,12 @@ En este caso, limpiaremos la variable tal que solo quede el tipo de clasificaci�
 Para los casos en que la película no tuviera explícita una categoría, se dicidió asignarles la `G`.
 
 ```{r tratamieto de la variable rating}
-
 df.Rating <- str_remove_all(df$Rating, "\\([a-zA-Z \\.,|/&-]*\\)") 
-
 # Agregando la variable Rating al dataframe original
 df$Rating <- df.Rating
-
 # Imputando el valor G en los valores vacios de la variable Rating
 df$Rating <- na_if(df$Rating, "")
 df$Rating[is.na(df$Rating)] <- "G"
-
 levels(factor(df$Rating))
 ```
 #### Creación de variable Parental.Control
@@ -193,7 +176,6 @@ p.control <- str_replace_all(df$Rating, "^G", "Yes")
 p.control <- str_replace_all(p.control,"NC-17|PG-13|PG|R|TV14|TVG|TVMA|TVPG",
                                     "No")
 p.control <- p.control
-
 df["Parental.Control"] <- p.control
 ```
 
@@ -206,7 +188,6 @@ plot2 <- ggplot(df, aes(Audience.score)) + geom_histogram(binwidth = 2)
 plot3 <- ggplot(df, aes(Fresh)) + geom_bar()
 plot4 <- ggplot(df, aes(Rating)) + geom_bar()
 plot5 <- ggplot(df, aes(Parental.Control)) + geom_bar()
-
 ggarrange(plot1, plot2, plot3)
 ggarrange(plot4, plot5)
 ```
@@ -216,23 +197,19 @@ ggarrange(plot4, plot5)
 Debido a que una misma película puede tener asignado más de un género, se dividirá esta variable en tres: Genre1, Genre2 y Genre3 y se imputarán en estas los tres principales géneros (si los tuviere) a los que pertenezca la película en cuestión, respectivamente
 
 ```{r Tratamiento de la variable Genre}
-
 df.Genre <- df$Genre
 # Generación variable Genre1
 df.Genre1 <- str_extract(df.Genre, "[a-zA-Z]*")
 #df.Genre1
-
 # Generación variable Genre2
 df.Genre2 <- str_extract(df.Genre,",[a-zA-Z]*" )
 df.Genre2 <- str_remove_all(df.Genre2, ",")
 #df.Gen2
-
 # Generación variable Gen3
 df.Genre3 <- str_extract(df.Genre, "([a-zA-Z]*,){2}[a-zA-Z]*")
 df.Genre3 <- str_extract(df.Genre3, ",[a-zA-Z]*$")
 df.Genre3<- str_remove_all(df.Genre3, ",")
 #df.Gen3
-
 # Eliminando variable Genre y agregando variables nuevas Gen1, Gen2 y Gen3
 # al dataset original
 df <- subset(df, select = -c(Genre))
@@ -248,7 +225,6 @@ El formato original de esta variable era una `string` que represetaba la hora y 
 En aquellos casos donde existía un valor `NA` se imputó el valor de la media de la variable.
 
 ```{r Tratamiento variable Runtime, warning=FALSE}
-
 horas <- as.integer(substr(df$Runtime, 1, 1))
 minutos <- as.integer(substr(df$Runtime, 3, 4)) 
 minutos[is.na(minutos)] <- as.integer(str_sub(df$Runtime[is.na(minutos)],
@@ -305,7 +281,6 @@ streamings.date <- as.Date(streamings.date,format="%D")
 theaters <- str_remove_all(theaters,"limited")
 theaters <- str_remove_all(theaters,"wide")
 theaters <- str_sub(theaters, 1, -3)
-
 #Separacion fecha
 theaters.year <-  as.integer(str_sub(theaters, -4, -1)) 
 theaters.month <-  substr(theaters, 1, 3)
@@ -351,12 +326,10 @@ df$Release.Date.Theaters <- NULL
 A continuación, se presentará una gráfica representativa de las variables: `Genre1`, `Runtime`, `Release.IsWide` y `Release.Season`:
 
 ```{r grafica de variables Genre1, warning=FALSE}
-
 plot6 <- ggplot(df, aes(Genre1)) + geom_bar() + coord_flip()
 plot7 <- ggplot(df, aes(Runtime)) + geom_boxplot() 
 plot8 <- ggplot(df, aes(Release.Season)) + geom_bar() 
 plot9 <- ggplot(df, aes(Release.isWide)) + geom_bar() 
-
 plot6
 ggarrange(plot7, plot8, plot9)
 ```
@@ -374,14 +347,11 @@ De lo observado en los gráficos se puede detallar que:
 Para finalizar la limpieza de los datos, se creará la variable DirectorIsWriter, que servirá para determinar si el director es la misma persona que el escritor. Esto, para posteriores análisis, será interesante.
 
 ```{r Creación de variable DirectorIsWriter}
-
 df$Director[df$Director=="" | df$Director=="UnknownDirector"] <- NA
-
 # Creación de variable DirectorIsWriter
 df$DirectorIsWriter<- (df$Director == df$Writer)
 df$DirectorIsWriter[df$DirectorIsWriter] <- "Yes"
 df$DirectorIsWriter[df$DirectorIsWriter =="FALSE"] <- "No"
-
 df$Production.Co[is.na(df$Production.Co)] <- df$Producer[is.na(df$Production.Co)]
 colnames(df)[9] <- "Production"
 df$Writer <- NULL
@@ -452,7 +422,6 @@ Luego, una vez finalizada la aplicación de estos métodos, nos apoyaremos en lo
 ### Variable: Tomatometer:
 
 ```{r metodo grafico normalidad Tomatometer}
-
 # Gráfica de histograma de Tomatometer junto con una curva 
 # de distribución normal
 plot1 <- ggplot(df, aes(Tomatometer)) +
@@ -463,12 +432,9 @@ plot1 <- ggplot(df, aes(Tomatometer)) +
                             sd = sd(df$Tomatometer))) +
   ggtitle("Histograma con curva normal teórica") +
   theme_bw()
-
 plot2 <- ggqqplot(df, x="Tomatometer", add = "qqline", ggtheme = theme_minimal(),
          title = "QQplot Tomatometer", ylim = c(0,100) )
-
 ggarrange(plot1, plot2)
-
 ```
 De los gráficos anteriores de la variable `Tomatometer`, se puede señalar lo siguiente:
 
@@ -478,7 +444,6 @@ De los gráficos anteriores de la variable `Tomatometer`, se puede señalar lo s
 
 ### Variable Audience.score:
 ```{r metodo grafico normalidad Audience Score}
-
 plot1 <- ggplot(df, aes(Audience.score)) +
   geom_histogram(aes(y =..density.., fill =..count..), binwidth = 2) +
   scale_fill_gradient(low = "#C3E4ED", high = "#35586C") +
@@ -487,13 +452,10 @@ plot1 <- ggplot(df, aes(Audience.score)) +
                             sd = sd(df$Audience.score))) +
   ggtitle("Histograma con curva normal teórica") +
   theme_bw()
-
 plot2 <- ggqqplot(df, x="Audience.score", add = "qqline", 
                   ggtheme = theme_minimal(),
          title = "QQplot Audience.score" , ylim = c(0,100))
-
 ggarrange(plot1,plot2)
-
 ```
 De los gráficos de la variable `Audience.score` se observa:
 
@@ -511,11 +473,9 @@ plot1 <- ggplot(df, aes(Runtime)) +
                             sd = sd(df$Runtime))) +
   ggtitle("Histograma con curva normal teórica") +
   theme_bw()
-
 plot2 <- ggqqplot(df, x="Runtime", add = "qqline", 
                   ggtheme = theme_minimal(),
          title = "QQplot Runtime" , ylim = c(50,350))
-
 ggarrange(plot1,plot2)
 ```
 De los gráficos de la variable `Runtime` se detalla:
@@ -533,10 +493,8 @@ En este apartado se aplicará un estudio de Curtosis y asimetría a cada una de 
 ```{r método analítico Tomatometer}
 # Cálculo de la curtorsis
 curtosis <- kurtosi(df$Tomatometer)
-
 # Cálculo de la asimetría
 asimetria <- skew(df$Tomatometer)
-
 sprintf("Curtosis: %.3f, Asimetría: %.3f", curtosis, asimetria)
 ```
 Los valores obtenidos, tanto en la curtosis como en la asimetría, estan en el rango de -1 a 1, lo cual señala una leve desviación de la normalidad.
@@ -546,10 +504,8 @@ Los valores obtenidos, tanto en la curtosis como en la asimetría, estan en el r
 ```{r método analítico Audience Score}
 # Cálculo de la curtorsis
 curtosis <- kurtosi(df$Audience.score)
-
 # Cálculo de la asimetría
 asimetria <- skew(df$Audience.score)
-
 sprintf("Curtosis: %.3f, Asimetría: %.3f", curtosis, asimetria)
 ```
 Los valores de curtosis y asimetría de la variable `Audience.score` señalan también una leve desviación de la normalidad. Pese a este resultado, todavia se podría considerar como cierto el supuesto de normalidad de esta variable.
@@ -558,10 +514,8 @@ Los valores de curtosis y asimetría de la variable `Audience.score` señalan ta
 ```{r método analítico Runtime}
 # Cálculo de la curtorsis
 curtosis <- kurtosi(df$Runtime)
-
 # Cálculo de la asimetría
 asimetria <- skew(df$Runtime)
-
 sprintf("Curtosis: %.3f, Asimetría: %.3f", curtosis, asimetria)
 ```
 En este caso, tanto la curtosis como la asimetría señalan que no es una curva normal. El valor elevado de la curtosis se debe a la forma "puntiaguda" de la curva producto de la concentración de datos en torno a los valores de 90 y 100. Por su parte, el valor de la asimetría se debe al sesgo derecho que presenta la curva.  
@@ -575,16 +529,12 @@ Debido a que la muestra es mucho mayor a 5000 registros, el test de Shapiro-Wilk
 Este test tiene como hipótesis nula: ***Los datos tienen una distribución normal***. Así, si el p-valor < nivel de significación (0.05), se rechazará la hipótesis nula.
 
 ```{r contando cuantas peliculas de mas de 150 min hay}
-
 # variable Tomatometer.
 ad.test(df$Tomatometer)
-
 # variable Audience.score
 ad.test(df$Audience.score)
-
 # variable Runtime
 ad.test(df$Runtime)
-
 ```
 Para las tres variables, el p-valor es menor a 0.05, por lo que, de acuerdo a este método de contraste, se debe rechazar el supuesto de normalidad. 
 
@@ -610,10 +560,8 @@ Se aplicará el test de homogeneidad de varianza para conocer si existe variaci�
 ```{r homogeneidad en la varianza Parental control}
 # Para variable Tomatometer
 fligner.test(df$Tomatometer ~ df$Parental.Control)
-
 # Para variable Audience.Score
 fligner.test(df$Audience.score ~ df$Parental.Control)
-
 # Para variable Runtime
 fligner.test(df$Runtime ~ df$Parental.Control)
 ```
@@ -628,10 +576,8 @@ En el caso de muestras divididas a partir de la variable `Parental.Control`, se 
 ```{r homogeneidad en la varianza Genre1}
 # Para variable Tomatometer
 fligner.test(df$Tomatometer ~ df$Genre1)
-
 # Para variable Audience.Score
 fligner.test(df$Audience.score ~ df$Genre1)
-
 # Para variable Runtime
 fligner.test(df$Runtime ~ df$Genre1)
 ```
@@ -642,10 +588,8 @@ Se observa en este caso que para las 24 muestras separadas por el genero al que 
 ```{r homogeneidad en la varianza Seasons}
 # Para variable Tomatometer
 fligner.test(df$Tomatometer ~ df$Release.Season)
-
 # Para variable Audience.Score
 fligner.test(df$Audience.score ~ df$Release.Season)
-
 # Para variable Runtime
 fligner.test(df$Runtime ~ df$Release.Season)
 ```
@@ -689,10 +633,8 @@ grid.arrange(p41, p42, ncol=2, nrow=1)
 ```{r representación de correlaciones 1}
 p43 <- ggplot(df, aes(x=Runtime, y=Audience.score)) + 
        geom_point() + ggtitle("Audience score by runtime")
-
 p44 <- ggplot(df, aes(x=Runtime, y=Tomatometer)) + 
        geom_point() + ggtitle("Tomatometer score by runtime")
-
 grid.arrange(p43, p44, ncol=1, nrow=2)
 ```
 
@@ -701,16 +643,12 @@ grid.arrange(p43, p44, ncol=1, nrow=2)
 ```{r representación de correlaciones 2, warning=FALSE}
 p45 <- ggplot(data = df,aes(x=Rating,fill=Fresh))+geom_bar() + coord_flip() +
        ggtitle("Fresh by rating")
-
 p46 <- ggplot(data = df,aes(x=Parental.Control,fill=Fresh))+geom_bar() + 
        ggtitle("Fresh by Parental Control")
-
 p47 <- ggplot(aes(y = Audience.score, x = (Parental.Control)), data = df) + 
        geom_boxplot() + ggtitle("Audience Score by Parental control")
-
 p48 <- ggplot(aes(y = Tomatometer, x = (Parental.Control)), data = df) + 
        geom_boxplot() + ggtitle("Tomatometer score by Parental control")
-
 grid.arrange(p45, p46, p47, p48, ncol=2, nrow=2)
 ```
 
@@ -721,13 +659,10 @@ grid.arrange(p45, p46, p47, p48, ncol=2, nrow=2)
 ```{r representación de correlaciones 3}
 p49 <- ggplot(data = df,aes(x=Release.Season,fill=Fresh))+geom_bar() + coord_flip() +
        ggtitle("Fresh by release season")
-
 p410 <- ggplot(aes(y = Audience.score, x = Release.Season), data = df) + 
         geom_boxplot() + ggtitle("Audience score by release season")
-
 p411 <- ggplot(aes(y = Tomatometer, x = Release.Season), data = df) + geom_boxplot() + 
         ggtitle("Tomatometer by release season")
-
 grid.arrange(p410, p411, p49, ncol=2, nrow=2)
 ```
 
@@ -737,20 +672,16 @@ grid.arrange(p410, p411, p49, ncol=2, nrow=2)
 p412 <- ggplot(data = subset(df,Release.Year>2005),
                aes(x=Release.Year, fill=Fresh))+geom_bar() + 
                ggtitle("Fresh by release year") + coord_flip()
-
 p411a <- ggplot(data = subset(df,Release.Year>2005),
                 aes(x=Release.Year,fill=Fresh))+geom_bar(position="fill") + 
                 ggtitle("Fresh percentaje by release year") + 
                 coord_flip() +ylab("Frecuencia")
-
 p413 <- ggplot(aes(y = Audience.score, x = Release.Year), 
                data = subset(df,Release.Year>2005)) + geom_boxplot() + 
                ggtitle("Audience score by year") + coord_flip()
-
 p414 <- ggplot(aes(y = Tomatometer, x = Release.Year), 
                data = subset(df,Release.Year>2005)) + geom_boxplot() + 
                ggtitle("Tomatometer score by year") + coord_flip()
-
 grid.arrange(p412, p411a, p413, p414, ncol=2, nrow=2)
 ```
 
@@ -761,18 +692,14 @@ grid.arrange(p412, p411a, p413, p414, ncol=2, nrow=2)
 ```{r representación de correlaciones 5, warning=FALSE}
 p415 <- ggplot(data = df,aes(x=Release.isWide,fill=Fresh))+geom_bar() + 
         ggtitle("Fresh by type of release")
-
 p415a <- ggplot(data = df,aes(x=Release.isWide,fill=Fresh)) + 
          geom_bar(position="fill") + 
          ggtitle("Fresh percentaje by type of release") + 
          ylab("Frecuencia")
-
 p416 <- ggplot(aes(y = Audience.score, x = (Release.isWide)), data = df) + 
         geom_boxplot() + ggtitle("Audience score by type of release")
-
 p417 <- ggplot(aes(y = Tomatometer, x =  (Release.isWide)), data = df) + 
         geom_boxplot() + ggtitle("Tomatometer score by type of release")
-
 grid.arrange(p415, p415a, p416, p417, ncol=2, nrow=2)
 ```
 
@@ -781,20 +708,16 @@ grid.arrange(p415, p415a, p416, p417, ncol=2, nrow=2)
 ```{r representación de correlaciones 6, warning=FALSE}
 p418 <- ggplot(data = df,aes(x=DirectorIsWriter,fill=Fresh)) + 
         geom_bar() + ggtitle("Fresh by DirectorIsWriter")
-
 p418a <- ggplot(data = df,aes(x=DirectorIsWriter,fill=Fresh)) + 
          geom_bar(position="fill") + 
          ggtitle("Fresh percentaje by DirectorIsWriter") + 
          ylab("Frecuencia")
-
 p419 <- ggplot(aes(y = Audience.score, x = as.factor(DirectorIsWriter)), 
               data = df) + geom_boxplot() + 
               ggtitle("Audience score by DirectorIsWriter")
-
 p420 <- ggplot(aes(y = Tomatometer, x =  as.factor(DirectorIsWriter)), 
                data = df) + geom_boxplot() + 
                ggtitle("Tomatometer score by DirectorIsWriter")
-
 grid.arrange(p418, p418a, p420, p419, ncol=2, nrow=2)
 ```
 
@@ -813,7 +736,6 @@ En primer lugar, se preparan los datos para la creación del modelo, seleccionan
 # Preparación de datos
 df2 <- df[c("Audience.score","Fresh", "Parental.Control","DirectorIsWriter",
             "Runtime", "Release.Year","Release.isWide","Genre1")]
-
 df2 <-  df2[complete.cases(df2), ]
 df2 <- df2[df2$Release.Year>2005,]
 Fresh.log <- df2$Fresh
@@ -831,7 +753,6 @@ model.log=glm(formula=Fresh.log~Runtime+factor(Parental.Control) +
               factor(Release.Year) + factor(DirectorIsWriter) + 
               factor(Release.isWide) +
               factor(Genre1),family=binomial(link=logit))
-
 summary(model.log)
 ```
 
@@ -841,9 +762,7 @@ Finalmente, se predicen las etiquetas del conjunto de datos y se obtiene la matr
 #Predicción de valores
 model.pred <- data.frame(values=predict(model.log,as.factor(Fresh),
                                         type = "response"))
-
 model.pred$predicted <- factor(ifelse(model.pred$values>0.5, "Yes", "No"))
-
 conf_matrix <- confusionMatrix(model.pred$predicted,(as.factor(Fresh)))
 ```
 
@@ -877,25 +796,20 @@ Lo primero será separar las dos muestras, por un lado las películas cuyo direc
 # Separamos las muestras y nos quedamos solo con la variable Tomatometer
 director.and.writer <- df[df$DirectorIsWriter == "Yes",]
 just.director <- df[df$DirectorIsWriter == "No",]
-
 # Nos quedamos solo con las variables DirectorIsWriter y Tomatometer
 director.and.writer <- subset(director.and.writer, select = c(DirectorIsWriter,
                                                               Tomatometer))
-
 just.director <- subset(just.director, select = c(DirectorIsWriter,
                                                               Tomatometer))
-
 # Quitamos los valores NA
 director.and.writer <- director.and.writer[!is.na(director.and.writer),]
 just.director <- just.director[!is.na(just.director),]
-
 # Graficamos ambas variables para ver su distribución
 plot1 <- ggplot(just.director, aes(Tomatometer)) + geom_histogram(binwidth=2) +
          ggtitle("Tomatometer by Just Director")
 plot2 <- ggplot(director.and.writer, aes(Tomatometer)) + 
          geom_histogram(binwidth=2) +
          ggtitle("Tomatometer by Director and Writer")
-
 ggarrange(plot1,plot2)
 ```
 
@@ -907,14 +821,12 @@ Se comprobará el supuesto de normalidad de ambas variables, para ello se realiz
 ggqqplot(director.and.writer, x="Tomatometer", add = "qqline", 
          ggtheme = theme_minimal(),
          title = "QQplot Tomatometer by Director and Writer", ylim = c(0,100) )
-
 shapiro.test(director.and.writer$Tomatometer)
 ```
 ```{r supuesto de normalidad de variable just.director, warning=FALSE}
 ggqqplot(just.director, x="Tomatometer", add = "qqline", 
          ggtheme = theme_minimal(),
          title = "QQplot Tomatometer by Just Director", ylim = c(0,100) )
-
 shapiro.test(just.director$Tomatometer)
 ```
 En ambos casos el p-valor del test de Shapiro es menor a 0.05, por lo que no se puede suponer normalidad.
@@ -937,10 +849,8 @@ Esta hipótesis se traduce en:
 **H1: Xm_director.and.writer - Xm_just.director > 0**
 
 ```{r aplicando el t.test}
-
 t.test(director.and.writer$Tomatometer,just.director$Tomatometer, 
        alternative = "greater")
-
 ```
 Como se observa, el p-valor obtenido es menor a 0.05, por lo que se rechaza la hipótesis nula de que las medias de la puntuación `Tomatometer` son iguales, por lo que se acepta la hipótesis alternativa de que **La media de las puntuaciones `Tomatometer`de las películas cuyo director es también el escritor es mayor que la media de las películas que no cumplen esta condición**
 
@@ -971,14 +881,14 @@ Por observación de las gráficas, se observa que:
 
 Pasaremos ahora a comprobar el supuesto de normalidad. Para esto, realizaremos nuevamente un gráfico QQ y un test de Shapiro-Wilk para cada muestra
 
-```{r supuesto de normalidad de variables director.and.writer, warning=FALSE}
+```{r supuesto de normalidad de variables drama.movies, warning=FALSE}
 ggqqplot(drama.movies, x="Audience.score", add = "qqline", 
          ggtheme = theme_minimal(),
          title = "QQplot Audience Score by drama movie", ylim = c(0,100) )
 shapiro.test(drama.movies$Audience.score)
 ```
 
-```{r supuesto de normalidad de variables director.and.writer, warning=FALSE}
+```{r supuesto de normalidad de variables horror.movies, warning=FALSE}
 ggqqplot(horror.movies, x="Audience.score", add = "qqline", 
          ggtheme = theme_minimal(),
          title = "QQplot Audience Score by drama movie", ylim = c(0,100) )
@@ -994,7 +904,7 @@ Lo anterior se traduce en:
 **Ho: Xm_drama.movies - Xm_horror.movies = 0**
 **H1: Xm_drama.moviesr - Xm_horror.movies > 0**
 
-```{r aplicando el t.test}
+```{r aplicando el t.test hipotesis2}
 t.test(drama.movies$Audience.score,horror.movies$Audience.score, 
        alternative = "greater")
 ```
