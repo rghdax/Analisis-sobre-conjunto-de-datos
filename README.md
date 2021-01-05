@@ -8,7 +8,7 @@ Daniel Bagan Martínez y Rafael García Henríquez
 
 ## Contenido
 
-- *practica2_tipologia.pdf:** documento PDF con las respuestas a las preguntas y los nombres de los componentes.
+- **practica2_tipologia.pdf:** documento PDF con las respuestas a las preguntas y los nombres de los componentes.
 
 - **recogiendo_tomastes.csv:** fichero CSV con los datos originales.
 
