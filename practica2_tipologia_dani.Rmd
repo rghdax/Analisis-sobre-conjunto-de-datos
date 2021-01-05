@@ -873,7 +873,7 @@ Para finalizar el estudio sobre este dataset, se realizarán dos contraste de hi
 #### Contraste 1: Las películas cuyo director es también el escritor son mejores (tienen mayor Tomatometer) que las que no cumplen esta condición
 
 Lo primero será separar las dos muestras, por un lado las películas cuyo director es también el escritor y las que no y las graficamos para observar su distribución:
-```{r Separación de muestras warning=FALSE}
+```{r Separación de muestras, warning=FALSE}
 # Separamos las muestras y nos quedamos solo con la variable Tomatometer
 director.and.writer <- df[df$DirectorIsWriter == "Yes",]
 just.director <- df[df$DirectorIsWriter == "No",]
